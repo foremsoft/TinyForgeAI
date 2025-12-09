@@ -12,6 +12,7 @@ import shutil
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Optional
 
 
 def get_template_dir() -> Path:
@@ -19,7 +20,12 @@ def get_template_dir() -> Path:
     return Path(__file__).parent / "templates" / "inference_template"
 
 
-def build(model_path: str, output_dir: str, overwrite: bool = False) -> None:
+def build(
+    model_path: str,
+    output_dir: str,
+    overwrite: bool = False,
+    export_onnx: bool = False,
+) -> Optional[dict]:
     """
     Build an inference microservice from a model artifact.
 
@@ -27,6 +33,10 @@ def build(model_path: str, output_dir: str, overwrite: bool = False) -> None:
         model_path: Path to the model artifact file or directory.
         output_dir: Directory where the microservice will be created.
         overwrite: If True, overwrite existing output directory.
+        export_onnx: If True, also export to ONNX and quantize.
+
+    Returns:
+        Export report dict if export_onnx is True, None otherwise.
 
     Raises:
         FileNotFoundError: If model_path does not exist.
@@ -67,6 +77,40 @@ def build(model_path: str, output_dir: str, overwrite: bool = False) -> None:
 
     print(f"Successfully built inference service at: {output_path}")
 
+    # Handle ONNX export if requested
+    export_report = None
+    if export_onnx:
+        from backend.exporter.onnx_export import export_to_onnx
+        from backend.exporter.quantize import quantize_onnx
+
+        # Create ONNX output directory
+        onnx_dir = output_path / "onnx"
+        quant_dir = onnx_dir / "quant"
+
+        # Export to ONNX
+        onnx_path = export_to_onnx(model_path, str(onnx_dir))
+        print(f"Exported ONNX model to: {onnx_path}")
+
+        # Quantize
+        quantized_path = quantize_onnx(onnx_path, str(quant_dir))
+        print(f"Quantized model to: {quantized_path}")
+
+        # Create export report
+        export_report = {
+            "onnx_path": onnx_path,
+            "quantized_path": quantized_path,
+            "export_time": datetime.now(timezone.utc).isoformat(),
+            "model_path": str(model_path),
+        }
+
+        # Write export report
+        report_path = output_path / "export_report.json"
+        with open(report_path, "w") as f:
+            json.dump(export_report, f, indent=2)
+        print(f"Export report written to: {report_path}")
+
+    return export_report
+
 
 def main() -> None:
     """CLI entry point for the exporter builder."""
@@ -88,6 +132,11 @@ def main() -> None:
         action="store_true",
         help="Overwrite existing output directory if it exists.",
     )
+    parser.add_argument(
+        "--export-onnx",
+        action="store_true",
+        help="Export model to ONNX format and create quantized version.",
+    )
 
     args = parser.parse_args()
 
@@ -96,6 +145,7 @@ def main() -> None:
             model_path=args.model_path,
             output_dir=args.output_dir,
             overwrite=args.overwrite,
+            export_onnx=args.export_onnx,
         )
     except FileNotFoundError as e:
         print(f"Error: {e}", file=sys.stderr)

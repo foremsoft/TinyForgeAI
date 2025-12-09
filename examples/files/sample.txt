@@ -1,0 +1,3 @@
+This is a sample text file for TinyForgeAI testing.
+It contains plain text content that can be ingested.
+File ingestion supports multiple formats including TXT, MD, DOCX, and PDF.

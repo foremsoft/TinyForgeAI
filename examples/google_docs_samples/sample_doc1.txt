@@ -1,0 +1,7 @@
+Welcome to TinyForgeAI Documentation
+
+This is a sample Google Doc used for testing the mock mode of the Google Docs connector. It contains example content that simulates what would be extracted from a real Google Doc.
+
+The TinyForgeAI platform enables you to fine-tune language models on your own data. You can connect to various data sources including databases, Google Docs, and local files.
+
+Getting started is easy: simply prepare your training data in JSONL format, configure your connector, and run the training pipeline.

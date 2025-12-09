@@ -1,0 +1,1 @@
+"""TinyForgeAI CLI package."""

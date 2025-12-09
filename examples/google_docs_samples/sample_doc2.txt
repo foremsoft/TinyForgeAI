@@ -1,0 +1,10 @@
+Frequently Asked Questions
+
+Q: How do I reset my password?
+A: Navigate to Settings and click on "Reset Password". You will receive an email with instructions.
+
+Q: What file formats are supported?
+A: TinyForgeAI supports JSONL, CSV, and direct database connections. You can also import from Google Docs.
+
+Q: How long does training take?
+A: Training time depends on your dataset size and the model configuration. A typical fine-tuning run on a small dataset takes 15-30 minutes.
