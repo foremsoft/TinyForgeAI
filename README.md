@@ -392,7 +392,7 @@ Apache License 2.0 - see [LICENSE](LICENSE) for details.
 - [x] Model Zoo expansion (13 pre-configured models, 9 task types)
 - [x] Multi-tenant inference service
 - [x] Cloud deployment templates (AWS, GCP, Azure)
-- [ ] A/B testing for model comparisons
+- [x] A/B testing for model comparisons
 - [ ] Model versioning and registry
 
 ---
