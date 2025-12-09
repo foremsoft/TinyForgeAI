@@ -362,8 +362,8 @@ Apache License 2.0 - see [LICENSE](LICENSE) for details.
 - [x] Model evaluation benchmarks (BLEU, ROUGE, F1, Perplexity)
 - [x] Web dashboard UI (React-based)
 - [x] Model Zoo expansion (13 pre-configured models, 9 task types)
-- [ ] Multi-tenant inference service
-- [ ] Cloud deployment templates (AWS, GCP, Azure)
+- [x] Multi-tenant inference service
+- [x] Cloud deployment templates (AWS, GCP, Azure)
 - [ ] A/B testing for model comparisons
 - [ ] Model versioning and registry
 

@@ -12,10 +12,20 @@ deploy/
 │   ├── hpa.yaml           # Horizontal Pod Autoscaler
 │   ├── pvc.yaml           # Persistent Volume Claim
 │   └── configmap.yaml     # Configuration
-└── helm-chart/            # Helm chart for production
-    ├── Chart.yaml
-    ├── values.yaml
-    └── templates/
+├── helm-chart/            # Helm chart for production
+│   ├── Chart.yaml
+│   ├── values.yaml
+│   └── templates/
+├── aws/                   # AWS deployment (CloudFormation + Terraform)
+│   ├── cloudformation-eks.yaml
+│   ├── terraform/
+│   └── README.md
+├── gcp/                   # GCP deployment (Terraform)
+│   ├── terraform/
+│   └── README.md
+└── azure/                 # Azure deployment (Terraform)
+    ├── terraform/
+    └── README.md
 ```
 
 ## Quick Start
@@ -217,37 +227,69 @@ kubectl get events -n tinyforge --sort-by='.lastTimestamp'
 7. **Network Policies**: Restrict pod communication
 8. **RBAC**: Configure appropriate service accounts
 
-## Cloud-Specific Guides
+## Cloud Deployment Guides
 
-### AWS EKS
+Full infrastructure-as-code templates are available for each major cloud provider:
+
+| Cloud Provider | IaC Tools | Documentation |
+|----------------|-----------|---------------|
+| **AWS** | CloudFormation, Terraform | [AWS Guide](./aws/README.md) |
+| **GCP** | Terraform | [GCP Guide](./gcp/README.md) |
+| **Azure** | Terraform | [Azure Guide](./azure/README.md) |
+
+### What's Included
+
+Each cloud deployment includes:
+- **Managed Kubernetes**: EKS (AWS), GKE (GCP), AKS (Azure)
+- **Container Registry**: ECR, Artifact Registry, ACR
+- **Object Storage**: S3, GCS, Azure Blob
+- **Networking**: VPC/VNet with private subnets
+- **IAM/Workload Identity**: Pod-level permissions
+- **Autoscaling**: HPA + Cluster Autoscaler
+- **Monitoring**: Native cloud logging and metrics
+- **GPU Support**: Optional GPU node pools
+
+### Quick Start by Cloud
+
+#### AWS EKS
 
 ```bash
-# Create cluster
-eksctl create cluster --name tinyforge --region us-west-2
+cd deploy/aws/terraform
+terraform init
+terraform apply
 
-# Deploy
-helm install tinyforge deploy/helm-chart/ -n tinyforge --create-namespace
+# Or use CloudFormation
+aws cloudformation create-stack \
+  --stack-name tinyforge-eks \
+  --template-body file://cloudformation-eks.yaml \
+  --capabilities CAPABILITY_NAMED_IAM
 ```
 
-### GKE
+#### GCP GKE
 
 ```bash
-# Create cluster
-gcloud container clusters create tinyforge --zone us-central1-a
-
-# Deploy
-helm install tinyforge deploy/helm-chart/ -n tinyforge --create-namespace
+cd deploy/gcp/terraform
+terraform init
+terraform apply
 ```
 
-### Azure AKS
+#### Azure AKS
 
 ```bash
-# Create cluster
-az aks create --resource-group myResourceGroup --name tinyforge
-
-# Deploy
-helm install tinyforge deploy/helm-chart/ -n tinyforge --create-namespace
+cd deploy/azure/terraform
+terraform init
+terraform apply
 ```
+
+### Cost Comparison
+
+| Cloud | Dev/Test | Production |
+|-------|----------|------------|
+| AWS | ~$176/mo | ~$292/mo |
+| GCP | ~$166/mo | ~$272/mo |
+| Azure | ~$160/mo | ~$345/mo |
+
+*Estimates based on 2 medium nodes, single NAT, basic storage*
 
 ## See Also
 

@@ -1,0 +1,45 @@
+# TinyForgeAI AWS Terraform Configuration Example
+# Copy this file to terraform.tfvars and customize for your environment
+
+# Required: AWS Region
+aws_region = "us-west-2"
+
+# Environment name (dev, staging, production)
+environment = "dev"
+
+# VPC Configuration
+vpc_cidr             = "10.0.0.0/16"
+private_subnet_cidrs = ["10.0.1.0/24", "10.0.2.0/24"]
+public_subnet_cidrs  = ["10.0.101.0/24", "10.0.102.0/24"]
+
+# EKS Configuration
+eks_cluster_version = "1.28"
+node_instance_types = ["t3.medium", "t3.large"]
+node_min_size       = 1
+node_max_size       = 5
+node_desired_size   = 2
+gpu_node_max_size   = 2
+use_spot_instances  = false  # Set to true for cost savings in dev/staging
+
+# Inference Service Configuration
+inference_replicas     = 2
+inference_min_replicas = 1
+inference_max_replicas = 10
+inference_cpu_request  = "100m"
+inference_cpu_limit    = "500m"
+inference_memory_request = "256Mi"
+inference_memory_limit   = "512Mi"
+model_storage_size     = "10Gi"
+image_tag              = "latest"
+
+# Logging
+log_retention_days = 30
+
+# Additional IAM roles for cluster access (optional)
+# additional_aws_auth_roles = [
+#   {
+#     rolearn  = "arn:aws:iam::123456789012:role/DevOpsRole"
+#     username = "devops"
+#     groups   = ["system:masters"]
+#   }
+# ]

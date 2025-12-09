@@ -1,0 +1,38 @@
+# TinyForgeAI GCP Terraform Configuration Example
+# Copy this file to terraform.tfvars and customize for your environment
+
+# Required: GCP Project ID
+project_id = "your-gcp-project-id"
+
+# GCP Region
+region = "us-central1"
+
+# Environment name (dev, staging, production)
+environment = "dev"
+
+# Network Configuration
+subnet_cidr   = "10.0.0.0/24"
+pods_cidr     = "10.1.0.0/16"
+services_cidr = "10.2.0.0/20"
+master_cidr   = "172.16.0.0/28"
+
+# GKE Configuration
+release_channel   = "REGULAR"  # RAPID, REGULAR, or STABLE
+node_machine_type = "e2-medium"
+node_min_size     = 1
+node_max_size     = 5
+node_desired_size = 2
+use_preemptible   = false  # Set to true for cost savings in dev/staging
+enable_gpu_nodes  = false
+gpu_node_max_size = 2
+
+# Inference Service Configuration
+inference_replicas       = 2
+inference_min_replicas   = 1
+inference_max_replicas   = 10
+inference_cpu_request    = "100m"
+inference_cpu_limit      = "500m"
+inference_memory_request = "256Mi"
+inference_memory_limit   = "512Mi"
+model_storage_size       = "10Gi"
+image_tag                = "latest"

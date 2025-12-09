@@ -1,0 +1,43 @@
+# TinyForgeAI Azure Terraform Configuration Example
+# Copy this file to terraform.tfvars and customize for your environment
+
+# Azure Region
+location = "eastus"
+
+# Environment name (dev, staging, production)
+environment = "dev"
+
+# Network Configuration
+vnet_cidr       = "10.0.0.0/16"
+aks_subnet_cidr = "10.0.0.0/22"
+service_cidr    = "10.1.0.0/16"
+dns_service_ip  = "10.1.0.10"
+
+# AKS Configuration
+kubernetes_version = "1.28"
+node_vm_size       = "Standard_D2s_v3"
+node_min_size      = 1
+node_max_size      = 5
+node_desired_size  = 2
+enable_gpu_nodes   = false
+gpu_node_max_size  = 2
+
+# ACR Configuration
+acr_sku = "Basic"  # Basic, Standard, or Premium
+
+# Inference Service Configuration
+inference_replicas       = 2
+inference_min_replicas   = 1
+inference_max_replicas   = 10
+inference_cpu_request    = "100m"
+inference_cpu_limit      = "500m"
+inference_memory_request = "256Mi"
+inference_memory_limit   = "512Mi"
+model_storage_size       = "10Gi"
+image_tag                = "latest"
+
+# Logging
+log_retention_days = 30
+
+# Azure AD group object IDs for cluster admin access (optional)
+# admin_group_object_ids = ["00000000-0000-0000-0000-000000000000"]
