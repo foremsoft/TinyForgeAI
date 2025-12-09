@@ -325,6 +325,8 @@ class TestCLI:
         assert callable(main)
 
 
+@pytest.mark.slow
+@pytest.mark.integration
 @pytest.mark.skipif(
     not indexer_module.EMBEDDINGS_AVAILABLE or not indexer_module.NUMPY_AVAILABLE,
     reason="Embedding dependencies not installed"

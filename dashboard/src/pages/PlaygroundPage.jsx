@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { predict, getServices, getModels } from '../api/client'
 
 const cardStyle = {
   background: 'white',
@@ -29,62 +30,139 @@ const buttonStyle = {
 }
 
 export default function PlaygroundPage() {
-  const [apiUrl, setApiUrl] = useState('http://localhost:8000/predict')
+  const [services, setServices] = useState([])
+  const [models, setModels] = useState([])
+  const [selectedService, setSelectedService] = useState('')
   const [input, setInput] = useState('What is your refund policy?')
   const [response, setResponse] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [history, setHistory] = useState([])
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [servicesData, modelsData] = await Promise.all([
+          getServices(),
+          getModels()
+        ])
+        const runningServices = servicesData.filter(s => s.status === 'running')
+        setServices(runningServices)
+        setModels(modelsData)
+        if (runningServices.length > 0) {
+          setSelectedService(runningServices[0].id)
+        }
+      } catch (err) {
+        setError(err.message)
+      }
+    }
+    loadData()
+  }, [])
 
   async function handleSubmit() {
+    if (!input.trim()) return
+
     setIsLoading(true)
     setError(null)
     setResponse(null)
 
+    const startTime = Date.now()
+
     try {
-      const res = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ input })
-      })
+      const data = await predict(input, selectedService || null)
+      const latency = Date.now() - startTime
 
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}: ${res.statusText}`)
+      const result = {
+        ...data,
+        latency_ms: latency
       }
+      setResponse(result)
 
-      const data = await res.json()
-      setResponse(data)
+      // Add to history
+      setHistory(prev => [{
+        timestamp: new Date().toISOString(),
+        input,
+        output: data.output || data.prediction,
+        latency_ms: latency,
+        service: selectedService
+      }, ...prev.slice(0, 9)]) // Keep last 10
+
     } catch (err) {
-      // For demo purposes, show a mock response if API is not available
-      if (err.message.includes('Failed to fetch')) {
-        setResponse({
-          output: input.split('').reverse().join(''),
-          confidence: 0.75,
-          _note: 'Mock response (API not available)'
-        })
-      } else {
-        setError(err.message)
-      }
+      setError(err.message)
     } finally {
       setIsLoading(false)
     }
   }
 
+  const getServiceInfo = (serviceId) => {
+    const service = services.find(s => s.id === serviceId)
+    if (!service) return null
+    const model = models.find(m => m.id === service.model_id)
+    return { service, model }
+  }
+
+  const selectedInfo = getServiceInfo(selectedService)
+
   return (
     <div>
       <h1 style={{ marginBottom: '24px' }}>Playground</h1>
 
+      {error && (
+        <div style={{
+          ...cardStyle,
+          background: '#fff3e0',
+          borderLeft: '4px solid #ff9800',
+          marginBottom: '24px'
+        }}>
+          <strong>Error:</strong> {error}
+          <br />
+          <small>Make sure the Dashboard API is running and a service is deployed</small>
+        </div>
+      )}
+
       <div style={cardStyle}>
-        <h3 style={{ marginBottom: '16px' }}>API Configuration</h3>
-        <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500' }}>
-          Service URL
-        </label>
-        <input
-          type="text"
-          value={apiUrl}
-          onChange={(e) => setApiUrl(e.target.value)}
-          style={inputStyle}
-          placeholder="http://localhost:8000/predict"
-        />
+        <h3 style={{ marginBottom: '16px' }}>Select Service</h3>
+
+        {services.length === 0 ? (
+          <div style={{
+            padding: '16px',
+            background: '#f5f5f5',
+            borderRadius: '4px',
+            color: '#666'
+          }}>
+            No running services available. Deploy a service first to use the playground.
+          </div>
+        ) : (
+          <>
+            <select
+              value={selectedService}
+              onChange={(e) => setSelectedService(e.target.value)}
+              style={{ ...inputStyle, cursor: 'pointer' }}
+            >
+              {services.map(service => (
+                <option key={service.id} value={service.id}>
+                  {service.name} (Port {service.port})
+                </option>
+              ))}
+            </select>
+
+            {selectedInfo && (
+              <div style={{
+                padding: '12px',
+                background: '#f5f5f5',
+                borderRadius: '4px',
+                fontSize: '13px'
+              }}>
+                <div><strong>Endpoint:</strong> <code>http://localhost:{selectedInfo.service.port}/predict</code></div>
+                {selectedInfo.model && (
+                  <div style={{ marginTop: '4px' }}>
+                    <strong>Model:</strong> {selectedInfo.model.name} ({selectedInfo.model.model_type})
+                  </div>
+                )}
+              </div>
+            )}
+          </>
+        )}
       </div>
 
       <div style={cardStyle}>
@@ -102,26 +180,15 @@ export default function PlaygroundPage() {
         />
         <button
           onClick={handleSubmit}
-          disabled={isLoading || !input.trim()}
+          disabled={isLoading || !input.trim() || services.length === 0}
           style={{
             ...buttonStyle,
-            opacity: (isLoading || !input.trim()) ? 0.7 : 1
+            opacity: (isLoading || !input.trim() || services.length === 0) ? 0.7 : 1
           }}
         >
-          {isLoading ? 'Sending...' : 'Send Request'}
+          {isLoading ? 'Processing...' : 'Send Request'}
         </button>
       </div>
-
-      {error && (
-        <div style={{
-          ...cardStyle,
-          background: '#ffebee',
-          borderLeft: '4px solid #c62828'
-        }}>
-          <h4 style={{ color: '#c62828', marginBottom: '8px' }}>Error</h4>
-          <p>{error}</p>
-        </div>
-      )}
 
       {response && (
         <div style={{
@@ -129,17 +196,90 @@ export default function PlaygroundPage() {
           background: '#e8f5e9',
           borderLeft: '4px solid #4caf50'
         }}>
-          <h4 style={{ marginBottom: '12px' }}>Response</h4>
-          <pre style={{
-            background: '#1a1a2e',
-            color: '#e0e0e0',
-            padding: '16px',
-            borderRadius: '4px',
-            overflow: 'auto',
-            fontSize: '13px'
-          }}>
-            {JSON.stringify(response, null, 2)}
-          </pre>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <h4>Response</h4>
+            <span style={{ fontSize: '12px', color: '#666' }}>
+              Latency: {response.latency_ms}ms
+            </span>
+          </div>
+
+          {response.output && (
+            <div style={{
+              padding: '16px',
+              background: 'white',
+              borderRadius: '4px',
+              marginBottom: '12px'
+            }}>
+              <strong>Output:</strong>
+              <p style={{ marginTop: '8px', whiteSpace: 'pre-wrap' }}>{response.output}</p>
+            </div>
+          )}
+
+          <details style={{ cursor: 'pointer' }}>
+            <summary style={{ fontSize: '13px', color: '#666' }}>Raw Response</summary>
+            <pre style={{
+              background: '#1a1a2e',
+              color: '#e0e0e0',
+              padding: '16px',
+              borderRadius: '4px',
+              overflow: 'auto',
+              fontSize: '13px',
+              marginTop: '8px'
+            }}>
+              {JSON.stringify(response, null, 2)}
+            </pre>
+          </details>
+        </div>
+      )}
+
+      {history.length > 0 && (
+        <div style={cardStyle}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h3>Recent Requests</h3>
+            <button
+              onClick={() => setHistory([])}
+              style={{
+                padding: '4px 8px',
+                background: '#f5f5f5',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '12px'
+              }}
+            >
+              Clear History
+            </button>
+          </div>
+
+          <div style={{ maxHeight: '300px', overflow: 'auto' }}>
+            {history.map((item, idx) => (
+              <div
+                key={idx}
+                style={{
+                  padding: '12px',
+                  background: idx % 2 === 0 ? '#f9f9f9' : 'white',
+                  borderRadius: '4px',
+                  marginBottom: '8px',
+                  fontSize: '13px'
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ color: '#666' }}>
+                    {new Date(item.timestamp).toLocaleTimeString()}
+                  </span>
+                  <span style={{ color: '#666' }}>
+                    {item.latency_ms}ms
+                  </span>
+                </div>
+                <div style={{ marginBottom: '4px' }}>
+                  <strong>Input:</strong> {item.input.substring(0, 100)}{item.input.length > 100 ? '...' : ''}
+                </div>
+                <div style={{ color: '#2e7d32' }}>
+                  <strong>Output:</strong> {item.output?.substring(0, 100)}{item.output?.length > 100 ? '...' : ''}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
@@ -153,9 +293,15 @@ export default function PlaygroundPage() {
           overflow: 'auto',
           fontSize: '13px'
         }}>
-{`curl -X POST ${apiUrl} \\
+{`# Using Dashboard API
+curl -X POST http://localhost:8001/api/predict \\
   -H "Content-Type: application/json" \\
-  -d '{"input": "${input.replace(/'/g, "\\'")}"}'`}
+  -d '{"input": "${input.replace(/'/g, "\\'").replace(/\n/g, '\\n')}"${selectedService ? `, "service_id": "${selectedService}"` : ''}}'
+
+# Direct service call (if running)
+${selectedInfo ? `curl -X POST http://localhost:${selectedInfo.service.port}/predict \\
+  -H "Content-Type: application/json" \\
+  -d '{"input": "${input.replace(/'/g, "\\'").replace(/\n/g, '\\n')}"}'` : '# No service selected'}`}
         </pre>
       </div>
     </div>

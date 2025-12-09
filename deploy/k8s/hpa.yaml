@@ -1,16 +1,18 @@
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: tinyforge-hpa
+  name: tinyforge-inference-hpa
+  namespace: tinyforge
   labels:
     app: tinyforge
+    component: inference
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
     name: tinyforge-inference
   minReplicas: 1
-  maxReplicas: 10
+  maxReplicas: 5
   metrics:
     - type: Resource
       resource:
@@ -29,7 +31,7 @@ spec:
       stabilizationWindowSeconds: 300
       policies:
         - type: Percent
-          value: 50
+          value: 25
           periodSeconds: 60
     scaleUp:
       stabilizationWindowSeconds: 0
@@ -38,6 +40,29 @@ spec:
           value: 100
           periodSeconds: 15
         - type: Pods
-          value: 4
-          periodSeconds: 15
+          value: 2
+          periodSeconds: 60
       selectPolicy: Max
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: tinyforge-dashboard-hpa
+  namespace: tinyforge
+  labels:
+    app: tinyforge
+    component: dashboard-api
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: tinyforge-dashboard-api
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70

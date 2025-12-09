@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tinyforge-training-worker
+  namespace: tinyforge
+  labels:
+    app: tinyforge
+    component: training-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tinyforge
+      component: training-worker
+  template:
+    metadata:
+      labels:
+        app: tinyforge
+        component: training-worker
+    spec:
+      containers:
+        - name: training-worker
+          image: tinyforge-training:latest
+          imagePullPolicy: IfNotPresent
+          command: ["python", "-m", "services.training_worker.worker"]
+          envFrom:
+            - configMapRef:
+                name: tinyforge-worker-config
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "500m"
+            limits:
+              memory: "4Gi"
+              cpu: "2000m"
+              # GPU support (uncomment for GPU-enabled clusters)
+              # nvidia.com/gpu: 1
+          volumeMounts:
+            - name: models-volume
+              mountPath: /app/output
+            - name: data-volume
+              mountPath: /app/data
+            - name: cache-volume
+              mountPath: /root/.cache
+      volumes:
+        - name: models-volume
+          persistentVolumeClaim:
+            claimName: tinyforge-models-pvc
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: tinyforge-data-pvc
+        - name: cache-volume
+          persistentVolumeClaim:
+            claimName: tinyforge-cache-pvc
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tinyforge-worker-config
+  namespace: tinyforge
+  labels:
+    app: tinyforge
+data:
+  TINYFORGE_API_URL: "http://tinyforge-dashboard-api:8001"
+  TINYFORGE_POLL_INTERVAL: "5"
+  TINYFORGE_OUTPUT_DIR: "/app/output"
+  HF_HOME: "/root/.cache/huggingface"
+  TRANSFORMERS_CACHE: "/root/.cache/huggingface/transformers"

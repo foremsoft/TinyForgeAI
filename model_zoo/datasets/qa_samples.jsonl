@@ -1,0 +1,15 @@
+{"input": "What is your return policy?", "output": "You can return any item within 30 days of purchase with the original receipt for a full refund."}
+{"input": "How do I reset my password?", "output": "Go to Settings > Account > Security, then click 'Reset Password' and follow the instructions sent to your email."}
+{"input": "What payment methods do you accept?", "output": "We accept Visa, MasterCard, American Express, PayPal, and Apple Pay."}
+{"input": "How long does shipping take?", "output": "Standard shipping takes 5-7 business days. Express shipping is available for 2-3 day delivery."}
+{"input": "Can I cancel my order?", "output": "Yes, you can cancel your order within 24 hours of placing it. Go to My Orders and click Cancel."}
+{"input": "Do you offer international shipping?", "output": "Yes, we ship to over 50 countries. International shipping typically takes 10-14 business days."}
+{"input": "How do I contact customer support?", "output": "You can reach us via email at support@example.com, live chat on our website, or call 1-800-555-0123."}
+{"input": "What is your warranty policy?", "output": "All products come with a 1-year manufacturer warranty covering defects in materials and workmanship."}
+{"input": "How do I track my order?", "output": "Once shipped, you'll receive a tracking number via email. Use it on our website or the carrier's site."}
+{"input": "Can I change my shipping address?", "output": "You can update your shipping address before the order ships. Contact support immediately for changes."}
+{"input": "Do you have a loyalty program?", "output": "Yes! Join our rewards program to earn points on every purchase. 100 points equals $1 off your next order."}
+{"input": "What are your store hours?", "output": "Our stores are open Monday-Saturday 9 AM to 9 PM, and Sunday 10 AM to 6 PM."}
+{"input": "How do I apply a coupon code?", "output": "Enter your coupon code in the 'Promo Code' field at checkout before completing your purchase."}
+{"input": "Is my payment information secure?", "output": "Yes, we use industry-standard SSL encryption and never store your complete credit card information."}
+{"input": "Can I exchange an item?", "output": "Yes, exchanges are free within 30 days. Bring the item and receipt to any store or contact us online."}

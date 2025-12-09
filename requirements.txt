@@ -18,5 +18,11 @@ httpx>=0.24
 # PyMuPDF>=1.22.0
 # pdfminer.six>=20221105
 
+# Monitoring
+prometheus-client>=0.16.0
+
+# Database
+sqlalchemy>=2.0
+
 # Linting (for CI)
 flake8>=6.0

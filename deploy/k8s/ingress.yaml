@@ -1,0 +1,61 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tinyforge-ingress
+  namespace: tinyforge
+  labels:
+    app: tinyforge
+  annotations:
+    # For nginx ingress controller
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    # Enable WebSocket support
+    nginx.ingress.kubernetes.io/websocket-services: "tinyforge-dashboard-api"
+    # For AWS ALB (uncomment if using AWS)
+    # kubernetes.io/ingress.class: alb
+    # alb.ingress.kubernetes.io/scheme: internet-facing
+spec:
+  ingressClassName: nginx
+  # Uncomment for TLS
+  # tls:
+  #   - hosts:
+  #       - tinyforge.example.com
+  #     secretName: tinyforge-tls
+  rules:
+    - host: tinyforge.local
+      http:
+        paths:
+          # Dashboard API
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: tinyforge-dashboard-api
+                port:
+                  number: 8001
+          # Dashboard WebSocket
+          - path: /ws
+            pathType: Prefix
+            backend:
+              service:
+                name: tinyforge-dashboard-api
+                port:
+                  number: 8001
+          # Inference service
+          - path: /inference
+            pathType: Prefix
+            backend:
+              service:
+                name: tinyforge-inference-svc
+                port:
+                  number: 80
+          # Health checks
+          - path: /health
+            pathType: Exact
+            backend:
+              service:
+                name: tinyforge-dashboard-api
+                port:
+                  number: 8001

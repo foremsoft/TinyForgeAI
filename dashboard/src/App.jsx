@@ -1,9 +1,11 @@
-import React from 'react'
-import { BrowserRouter, Routes, Route, Link, NavLink } from 'react-router-dom'
+import React, { useState, useEffect } from 'react'
+import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom'
 import TrainPage from './pages/TrainPage'
 import ServicesPage from './pages/ServicesPage'
 import LogsPage from './pages/LogsPage'
 import PlaygroundPage from './pages/PlaygroundPage'
+import ModelsPage from './pages/ModelsPage'
+import { checkApiStatus } from './api/client'
 
 const navStyle = {
   display: 'flex',
@@ -40,7 +42,37 @@ const mainStyle = {
   margin: '0 auto'
 }
 
+const statusIndicatorStyle = (connected) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '8px',
+  marginLeft: 'auto',
+  fontSize: '13px',
+  color: connected ? '#81c784' : '#e57373'
+})
+
+const statusDotStyle = (connected) => ({
+  width: '8px',
+  height: '8px',
+  borderRadius: '50%',
+  background: connected ? '#4caf50' : '#f44336'
+})
+
 export default function App() {
+  const [apiStatus, setApiStatus] = useState({ connected: false, loading: true })
+
+  useEffect(() => {
+    const checkStatus = async () => {
+      const status = await checkApiStatus()
+      setApiStatus({ ...status, loading: false })
+    }
+
+    checkStatus()
+    const interval = setInterval(checkStatus, 10000) // Check every 10 seconds
+
+    return () => clearInterval(interval)
+  }, [])
+
   return (
     <BrowserRouter>
       <nav style={navStyle}>
@@ -50,6 +82,12 @@ export default function App() {
           style={({ isActive }) => isActive ? activeLinkStyle : linkStyle}
         >
           Train
+        </NavLink>
+        <NavLink
+          to="/models"
+          style={({ isActive }) => isActive ? activeLinkStyle : linkStyle}
+        >
+          Models
         </NavLink>
         <NavLink
           to="/services"
@@ -69,10 +107,16 @@ export default function App() {
         >
           Logs
         </NavLink>
+        <div style={statusIndicatorStyle(apiStatus.connected)}>
+          <span style={statusDotStyle(apiStatus.connected)} />
+          {apiStatus.loading ? 'Connecting...' :
+           apiStatus.connected ? `API v${apiStatus.version || '?'}` : 'API Offline'}
+        </div>
       </nav>
       <main style={mainStyle}>
         <Routes>
           <Route path="/" element={<TrainPage />} />
+          <Route path="/models" element={<ModelsPage />} />
           <Route path="/services" element={<ServicesPage />} />
           <Route path="/playground" element={<PlaygroundPage />} />
           <Route path="/logs" element={<LogsPage />} />

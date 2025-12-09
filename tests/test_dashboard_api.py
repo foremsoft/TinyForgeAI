@@ -2,6 +2,7 @@
 Tests for TinyForgeAI Dashboard API
 
 Comprehensive test suite covering all API endpoints.
+Uses in-memory storage (USE_DATABASE=false) for fast, isolated tests.
 """
 
 import pytest
@@ -11,6 +12,7 @@ from services.dashboard_api.main import (
     app,
     jobs_db,
     services_db,
+    models_db,
     logs_db,
     JobStatus,
     ServiceStatus,
@@ -19,9 +21,11 @@ from services.dashboard_api.main import (
 
 @pytest.fixture
 def client():
-    """Create a test client and clear databases."""
+    """Create a test client with fresh in-memory storage."""
+    # Clear in-memory stores for each test
     jobs_db.clear()
     services_db.clear()
+    models_db.clear()
     logs_db.clear()
     return TestClient(app)
 
@@ -53,6 +57,21 @@ def sample_service_data():
     }
 
 
+@pytest.fixture
+def sample_model_data():
+    """Sample model registration data."""
+    return {
+        "name": "test-model",
+        "description": "A test model for unit testing",
+        "model_type": "seq2seq",
+        "base_model": "t5-small",
+        "path": "models/test-model",
+        "size_bytes": 1024000,
+        "job_id": None,
+        "metadata": {"version": "1.0", "accuracy": 0.95},
+    }
+
+
 # ============================================
 # Health & Root Tests
 # ============================================
@@ -69,6 +88,7 @@ class TestHealthEndpoints:
         assert "version" in data
         assert "jobs_count" in data
         assert "services_count" in data
+        assert "models_count" in data
 
     def test_root_endpoint(self, client):
         """Test / root endpoint returns API info."""
@@ -387,6 +407,7 @@ class TestDashboardStats:
         assert data["total_services"] == 0
         assert data["running_services"] == 0
         assert data["total_predictions"] == 0
+        assert data["total_models"] == 0
 
     def test_stats_with_data(self, client, sample_job_data, sample_service_data):
         """Test stats after creating jobs and services."""
@@ -548,3 +569,259 @@ class TestIntegration:
         # Verify gone
         list_response = client.get("/api/services")
         assert len(list_response.json()) == 0
+
+    def test_full_model_lifecycle(self, client, sample_model_data):
+        """Test complete model lifecycle: register -> update -> deploy -> undeploy -> delete."""
+        # Register
+        create_response = client.post("/api/models", json=sample_model_data)
+        assert create_response.status_code == 200
+        model_id = create_response.json()["id"]
+
+        # Update
+        update_response = client.put(
+            f"/api/models/{model_id}",
+            json={"description": "Updated description"}
+        )
+        assert update_response.status_code == 200
+        assert update_response.json()["description"] == "Updated description"
+
+        # Deploy
+        deploy_response = client.post(f"/api/models/{model_id}/deploy")
+        assert deploy_response.status_code == 200
+        assert deploy_response.json()["is_deployed"] is True
+
+        # Cannot delete deployed model
+        delete_response = client.delete(f"/api/models/{model_id}")
+        assert delete_response.status_code == 400
+
+        # Undeploy
+        undeploy_response = client.post(f"/api/models/{model_id}/undeploy")
+        assert undeploy_response.status_code == 200
+        assert undeploy_response.json()["is_deployed"] is False
+
+        # Delete
+        delete_response = client.delete(f"/api/models/{model_id}")
+        assert delete_response.status_code == 200
+
+        # Verify gone
+        list_response = client.get("/api/models")
+        assert len(list_response.json()) == 0
+
+
+# ============================================
+# Model Registry Tests
+# ============================================
+
+class TestModelRegistry:
+    """Test model registry endpoints."""
+
+    def test_register_model(self, client, sample_model_data):
+        """Test registering a new model."""
+        response = client.post("/api/models", json=sample_model_data)
+        assert response.status_code == 200
+
+        data = response.json()
+        assert data["name"] == sample_model_data["name"]
+        assert data["description"] == sample_model_data["description"]
+        assert data["model_type"] == sample_model_data["model_type"]
+        assert data["base_model"] == sample_model_data["base_model"]
+        assert data["path"] == sample_model_data["path"]
+        assert data["size_bytes"] == sample_model_data["size_bytes"]
+        assert data["is_deployed"] is False
+        assert "id" in data
+        assert "created_at" in data
+        assert "size" in data  # Human-readable size
+
+    def test_register_model_minimal(self, client):
+        """Test registering a model with minimal required fields."""
+        minimal_data = {
+            "name": "minimal-model",
+            "path": "models/minimal",
+        }
+        response = client.post("/api/models", json=minimal_data)
+        assert response.status_code == 200
+
+        data = response.json()
+        assert data["name"] == "minimal-model"
+        assert data["path"] == "models/minimal"
+        assert data["is_deployed"] is False
+
+    def test_register_model_invalid_name(self, client):
+        """Test registering a model with invalid name fails."""
+        invalid_data = {
+            "name": "",  # Empty name should fail
+            "path": "models/test",
+        }
+        response = client.post("/api/models", json=invalid_data)
+        assert response.status_code == 422  # Validation error
+
+    def test_list_models_empty(self, client):
+        """Test listing models when none exist."""
+        response = client.get("/api/models")
+        assert response.status_code == 200
+        assert response.json() == []
+
+    def test_list_models(self, client, sample_model_data):
+        """Test listing models after registration."""
+        client.post("/api/models", json=sample_model_data)
+        sample_model_data["name"] = "second-model"
+        sample_model_data["path"] = "models/second"
+        client.post("/api/models", json=sample_model_data)
+
+        response = client.get("/api/models")
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data) == 2
+
+    def test_list_models_with_type_filter(self, client, sample_model_data):
+        """Test filtering models by type."""
+        # Create seq2seq model
+        client.post("/api/models", json=sample_model_data)
+
+        # Create classification model
+        sample_model_data["name"] = "classifier"
+        sample_model_data["path"] = "models/classifier"
+        sample_model_data["model_type"] = "classification"
+        client.post("/api/models", json=sample_model_data)
+
+        # Filter by seq2seq
+        response = client.get("/api/models?model_type=seq2seq")
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data) == 1
+        assert data[0]["model_type"] == "seq2seq"
+
+        # Filter by classification
+        response = client.get("/api/models?model_type=classification")
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data) == 1
+        assert data[0]["model_type"] == "classification"
+
+    def test_get_model(self, client, sample_model_data):
+        """Test getting a specific model by ID."""
+        create_response = client.post("/api/models", json=sample_model_data)
+        model_id = create_response.json()["id"]
+
+        response = client.get(f"/api/models/{model_id}")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["id"] == model_id
+        assert data["name"] == sample_model_data["name"]
+
+    def test_get_model_not_found(self, client):
+        """Test getting a non-existent model returns 404."""
+        response = client.get("/api/models/nonexistent")
+        assert response.status_code == 404
+        assert "not found" in response.json()["detail"].lower()
+
+    def test_update_model(self, client, sample_model_data):
+        """Test updating a model."""
+        create_response = client.post("/api/models", json=sample_model_data)
+        model_id = create_response.json()["id"]
+
+        update_data = {
+            "name": "updated-model",
+            "description": "Updated description",
+            "metadata": {"version": "2.0"},
+        }
+        response = client.put(f"/api/models/{model_id}", json=update_data)
+        assert response.status_code == 200
+        data = response.json()
+        assert data["name"] == "updated-model"
+        assert data["description"] == "Updated description"
+        assert data["metadata"]["version"] == "2.0"
+
+    def test_update_model_not_found(self, client):
+        """Test updating non-existent model returns 404."""
+        response = client.put("/api/models/nonexistent", json={"name": "test"})
+        assert response.status_code == 404
+
+    def test_delete_model(self, client, sample_model_data):
+        """Test deleting a model."""
+        create_response = client.post("/api/models", json=sample_model_data)
+        model_id = create_response.json()["id"]
+
+        response = client.delete(f"/api/models/{model_id}")
+        assert response.status_code == 200
+
+        # Verify model is deleted
+        get_response = client.get(f"/api/models/{model_id}")
+        assert get_response.status_code == 404
+
+    def test_delete_model_not_found(self, client):
+        """Test deleting non-existent model returns 404."""
+        response = client.delete("/api/models/nonexistent")
+        assert response.status_code == 404
+
+    def test_delete_deployed_model_fails(self, client, sample_model_data):
+        """Test deleting a deployed model fails."""
+        create_response = client.post("/api/models", json=sample_model_data)
+        model_id = create_response.json()["id"]
+
+        # Deploy model
+        client.post(f"/api/models/{model_id}/deploy")
+
+        # Try to delete
+        response = client.delete(f"/api/models/{model_id}")
+        assert response.status_code == 400
+        assert "deployed" in response.json()["detail"].lower()
+
+    def test_deploy_model(self, client, sample_model_data):
+        """Test marking a model as deployed."""
+        create_response = client.post("/api/models", json=sample_model_data)
+        model_id = create_response.json()["id"]
+
+        response = client.post(f"/api/models/{model_id}/deploy")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["is_deployed"] is True
+
+    def test_deploy_model_not_found(self, client):
+        """Test deploying non-existent model returns 404."""
+        response = client.post("/api/models/nonexistent/deploy")
+        assert response.status_code == 404
+
+    def test_undeploy_model(self, client, sample_model_data):
+        """Test marking a model as undeployed."""
+        create_response = client.post("/api/models", json=sample_model_data)
+        model_id = create_response.json()["id"]
+
+        # Deploy first
+        client.post(f"/api/models/{model_id}/deploy")
+
+        # Undeploy
+        response = client.post(f"/api/models/{model_id}/undeploy")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["is_deployed"] is False
+
+    def test_undeploy_model_not_found(self, client):
+        """Test undeploying non-existent model returns 404."""
+        response = client.post("/api/models/nonexistent/undeploy")
+        assert response.status_code == 404
+
+    def test_size_formatting(self, client):
+        """Test human-readable size formatting."""
+        # Test different size ranges
+        test_cases = [
+            (0, "N/A"),
+            (500, "500.0 B"),
+            (1024, "1.0 KB"),
+            (1048576, "1.0 MB"),
+            (1073741824, "1.0 GB"),
+        ]
+
+        for size_bytes, expected_prefix in test_cases:
+            model_data = {
+                "name": f"model-{size_bytes}",
+                "path": f"models/{size_bytes}",
+                "size_bytes": size_bytes,
+            }
+            response = client.post("/api/models", json=model_data)
+            assert response.status_code == 200
+            data = response.json()
+            if size_bytes == 0:
+                assert data["size"] == "N/A"
+            else:
+                assert expected_prefix in data["size"]

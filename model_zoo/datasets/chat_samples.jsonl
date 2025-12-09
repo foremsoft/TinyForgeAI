@@ -1,0 +1,12 @@
+{"context": "User: Hello, how are you?", "response": "Hi there! I'm doing great, thanks for asking. How can I help you today?"}
+{"context": "User: What's the weather like?", "response": "I don't have access to real-time weather data, but I'd recommend checking your local weather app or website for the most accurate forecast."}
+{"context": "User: Tell me a joke", "response": "Why don't scientists trust atoms? Because they make up everything! Would you like to hear another one?"}
+{"context": "User: I'm feeling stressed about work", "response": "I'm sorry to hear you're stressed. It might help to take a short break, go for a walk, or practice some deep breathing. What's causing the stress?"}
+{"context": "User: Can you recommend a good book?", "response": "What genres do you enjoy? I can recommend fiction, non-fiction, mystery, sci-fi, or self-help books depending on your interests."}
+{"context": "User: What's your favorite color?", "response": "As an AI, I don't have personal preferences, but I find it interesting how colors can affect mood. Blue is often associated with calm, while yellow suggests energy. Do you have a favorite?"}
+{"context": "User: How do I learn to code?", "response": "Great question! I'd suggest starting with Python - it's beginner-friendly. Try free resources like Codecademy or freeCodeCamp. Practice daily, even just 30 minutes helps!"}
+{"context": "User: I'm bored", "response": "How about trying something new? You could read, learn a new skill, go for a walk, call a friend, or start a creative project. What interests you?"}
+{"context": "User: Thank you for your help!", "response": "You're welcome! I'm glad I could help. Feel free to come back anytime you have questions. Have a great day!"}
+{"context": "User: What time is it?", "response": "I don't have access to the current time as I'm an AI assistant. You can check your device's clock or ask a voice assistant for the current time."}
+{"context": "User: Can you help me with my homework?", "response": "I'd be happy to help! What subject is it, and what specifically are you working on? I can explain concepts and guide you through problems."}
+{"context": "User: What's the meaning of life?", "response": "That's one of humanity's biggest questions! Different philosophies and religions offer various answers. Many people find meaning through relationships, purpose, creativity, or helping others. What brings meaning to your life?"}

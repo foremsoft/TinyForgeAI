@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
+import { getLogs, createWebSocket } from '../api/client'
 
 const cardStyle = {
   background: 'white',
@@ -8,51 +9,134 @@ const cardStyle = {
   marginBottom: '24px'
 }
 
-const mockLogs = [
-  { timestamp: '2024-01-15 10:30:15', level: 'INFO', service: 'demo-service', message: 'Server started on port 8000' },
-  { timestamp: '2024-01-15 10:30:16', level: 'INFO', service: 'demo-service', message: 'Model loaded: model_stub.json' },
-  { timestamp: '2024-01-15 10:31:02', level: 'INFO', service: 'demo-service', message: 'POST /predict - 200 OK - 12ms' },
-  { timestamp: '2024-01-15 10:31:45', level: 'INFO', service: 'demo-service', message: 'POST /predict - 200 OK - 8ms' },
-  { timestamp: '2024-01-15 10:32:10', level: 'WARN', service: 'demo-service', message: 'Request timeout increased to 30s' },
-  { timestamp: '2024-01-15 10:33:22', level: 'INFO', service: 'demo-service', message: 'POST /predict - 200 OK - 15ms' },
-  { timestamp: '2024-01-15 10:34:01', level: 'ERROR', service: 'qa-model-svc', message: 'Failed to start: Port 8001 already in use' },
-  { timestamp: '2024-01-15 10:35:00', level: 'INFO', service: 'demo-service', message: 'Health check passed' },
-  { timestamp: '2024-01-15 10:36:12', level: 'INFO', service: 'demo-service', message: 'POST /predict - 200 OK - 10ms' },
-]
-
 const levelColors = {
   INFO: '#1565c0',
   WARN: '#ef6c00',
+  WARNING: '#ef6c00',
   ERROR: '#c62828',
-  DEBUG: '#666'
+  DEBUG: '#666',
+  CRITICAL: '#b71c1c'
 }
 
 export default function LogsPage() {
-  const [logs, setLogs] = useState(mockLogs)
-  const [filter, setFilter] = useState('all')
-  const [serviceFilter, setServiceFilter] = useState('all')
+  const [logs, setLogs] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [levelFilter, setLevelFilter] = useState('all')
+  const [sourceFilter, setSourceFilter] = useState('all')
+  const [autoScroll, setAutoScroll] = useState(true)
+  const [limit, setLimit] = useState(100)
+  const logContainerRef = useRef(null)
+
+  const loadLogs = async () => {
+    try {
+      setLoading(true)
+      const data = await getLogs(
+        levelFilter !== 'all' ? levelFilter : null,
+        sourceFilter !== 'all' ? sourceFilter : null,
+        limit
+      )
+      setLogs(data)
+      setError(null)
+    } catch (err) {
+      setError(err.message)
+      setLogs([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadLogs()
+
+    // Set up WebSocket for real-time logs
+    const ws = createWebSocket('logs')
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data)
+      if (data.type === 'log') {
+        setLogs(prev => [...prev, data.log].slice(-limit))
+      }
+    }
+
+    ws.onerror = () => {
+      console.log('WebSocket connection failed, using polling')
+    }
+
+    // Fallback polling every 5 seconds
+    const interval = setInterval(loadLogs, 5000)
+
+    return () => {
+      ws.close()
+      clearInterval(interval)
+    }
+  }, [levelFilter, sourceFilter, limit])
+
+  useEffect(() => {
+    if (autoScroll && logContainerRef.current) {
+      logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight
+    }
+  }, [logs, autoScroll])
 
   const filteredLogs = logs.filter(log => {
-    if (filter !== 'all' && log.level !== filter) return false
-    if (serviceFilter !== 'all' && log.service !== serviceFilter) return false
+    if (levelFilter !== 'all' && log.level !== levelFilter) return false
+    if (sourceFilter !== 'all' && log.source !== sourceFilter) return false
     return true
   })
 
-  const services = [...new Set(logs.map(l => l.service))]
+  const sources = [...new Set(logs.map(l => l.source).filter(Boolean))]
+
+  const formatTimestamp = (ts) => {
+    if (!ts) return ''
+    const date = new Date(ts)
+    return date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    })
+  }
+
+  const downloadLogs = () => {
+    const content = filteredLogs.map(log =>
+      `${log.timestamp || ''} [${log.level}] [${log.source || 'unknown'}] ${log.message}`
+    ).join('\n')
+
+    const blob = new Blob([content], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `tinyforge-logs-${new Date().toISOString().split('T')[0]}.txt`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
 
   return (
     <div>
       <h1 style={{ marginBottom: '24px' }}>Logs</h1>
 
+      {error && (
+        <div style={{
+          ...cardStyle,
+          background: '#fff3e0',
+          borderLeft: '4px solid #ff9800',
+          marginBottom: '24px'
+        }}>
+          <strong>API Connection Issue:</strong> {error}
+          <br />
+          <small>Make sure the Dashboard API is running on localhost:8001</small>
+        </div>
+      )}
+
       <div style={cardStyle}>
-        <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', gap: '16px', marginBottom: '16px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
           <div>
             <label style={{ display: 'block', marginBottom: '4px', fontSize: '13px', color: '#666' }}>
               Level
             </label>
             <select
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
+              value={levelFilter}
+              onChange={(e) => setLevelFilter(e.target.value)}
               style={{
                 padding: '8px 12px',
                 borderRadius: '4px',
@@ -61,18 +145,21 @@ export default function LogsPage() {
               }}
             >
               <option value="all">All Levels</option>
+              <option value="DEBUG">DEBUG</option>
               <option value="INFO">INFO</option>
-              <option value="WARN">WARN</option>
+              <option value="WARNING">WARNING</option>
               <option value="ERROR">ERROR</option>
+              <option value="CRITICAL">CRITICAL</option>
             </select>
           </div>
+
           <div>
             <label style={{ display: 'block', marginBottom: '4px', fontSize: '13px', color: '#666' }}>
-              Service
+              Source
             </label>
             <select
-              value={serviceFilter}
-              onChange={(e) => setServiceFilter(e.target.value)}
+              value={sourceFilter}
+              onChange={(e) => setSourceFilter(e.target.value)}
               style={{
                 padding: '8px 12px',
                 borderRadius: '4px',
@@ -80,15 +167,58 @@ export default function LogsPage() {
                 fontSize: '14px'
               }}
             >
-              <option value="all">All Services</option>
-              {services.map(svc => (
-                <option key={svc} value={svc}>{svc}</option>
+              <option value="all">All Sources</option>
+              {sources.map(src => (
+                <option key={src} value={src}>{src}</option>
               ))}
             </select>
           </div>
-          <div style={{ marginLeft: 'auto', alignSelf: 'flex-end' }}>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '4px', fontSize: '13px', color: '#666' }}>
+              Limit
+            </label>
+            <select
+              value={limit}
+              onChange={(e) => setLimit(parseInt(e.target.value))}
+              style={{
+                padding: '8px 12px',
+                borderRadius: '4px',
+                border: '1px solid #ddd',
+                fontSize: '14px'
+              }}
+            >
+              <option value="50">50 logs</option>
+              <option value="100">100 logs</option>
+              <option value="200">200 logs</option>
+              <option value="500">500 logs</option>
+            </select>
+          </div>
+
+          <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={autoScroll}
+              onChange={(e) => setAutoScroll(e.target.checked)}
+            />
+            Auto-scroll
+          </label>
+
+          <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px' }}>
             <button
-              onClick={() => setLogs([...mockLogs])}
+              onClick={downloadLogs}
+              style={{
+                padding: '8px 16px',
+                background: '#f5f5f5',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              Download
+            </button>
+            <button
+              onClick={loadLogs}
               style={{
                 padding: '8px 16px',
                 background: '#f5f5f5',
@@ -102,35 +232,59 @@ export default function LogsPage() {
           </div>
         </div>
 
-        <div style={{
-          background: '#1a1a2e',
-          borderRadius: '4px',
-          padding: '16px',
-          maxHeight: '500px',
-          overflow: 'auto',
-          fontFamily: 'Monaco, Consolas, monospace',
-          fontSize: '13px',
-          lineHeight: '1.6'
-        }}>
-          {filteredLogs.length === 0 ? (
+        <div
+          ref={logContainerRef}
+          style={{
+            background: '#1a1a2e',
+            borderRadius: '4px',
+            padding: '16px',
+            maxHeight: '500px',
+            overflow: 'auto',
+            fontFamily: 'Monaco, Consolas, monospace',
+            fontSize: '13px',
+            lineHeight: '1.6'
+          }}
+        >
+          {loading && logs.length === 0 ? (
+            <div style={{ color: '#666' }}>Loading logs...</div>
+          ) : filteredLogs.length === 0 ? (
             <div style={{ color: '#666' }}>No logs matching filters</div>
           ) : (
             filteredLogs.map((log, i) => (
-              <div key={i} style={{ marginBottom: '4px' }}>
-                <span style={{ color: '#666' }}>{log.timestamp}</span>
+              <div key={log.id || i} style={{ marginBottom: '4px' }}>
+                <span style={{ color: '#666' }}>{formatTimestamp(log.timestamp)}</span>
                 {' '}
                 <span style={{
-                  color: levelColors[log.level],
+                  color: levelColors[log.level] || '#888',
                   fontWeight: '500'
                 }}>
                   [{log.level}]
                 </span>
                 {' '}
-                <span style={{ color: '#888' }}>[{log.service}]</span>
-                {' '}
+                {log.source && (
+                  <>
+                    <span style={{ color: '#888' }}>[{log.source}]</span>
+                    {' '}
+                  </>
+                )}
                 <span style={{ color: '#e0e0e0' }}>{log.message}</span>
+                {log.details && (
+                  <details style={{ marginLeft: '20px', marginTop: '4px' }}>
+                    <summary style={{ color: '#666', cursor: 'pointer' }}>Details</summary>
+                    <pre style={{ color: '#aaa', marginTop: '4px' }}>
+                      {JSON.stringify(log.details, null, 2)}
+                    </pre>
+                  </details>
+                )}
               </div>
             ))
+          )}
+        </div>
+
+        <div style={{ marginTop: '12px', fontSize: '12px', color: '#666', display: 'flex', justifyContent: 'space-between' }}>
+          <span>Showing {filteredLogs.length} of {logs.length} logs</span>
+          {logs.length > 0 && logs[0].timestamp && (
+            <span>Latest: {new Date(logs[logs.length - 1]?.timestamp).toLocaleString()}</span>
           )}
         </div>
       </div>
@@ -145,11 +299,17 @@ export default function LogsPage() {
           overflow: 'auto',
           fontSize: '13px'
         }}>
-{`# View logs from running service
-docker logs -f tinyforge-inference
+{`# Fetch logs via API
+curl "http://localhost:8001/api/logs?limit=${limit}${levelFilter !== 'all' ? `&level=${levelFilter}` : ''}${sourceFilter !== 'all' ? `&source=${sourceFilter}` : ''}"
 
-# Or with kubectl
-kubectl logs -f -l app=tinyforge -n tinyforge`}
+# View logs from running containers
+docker logs -f tinyforge-api
+
+# View logs with kubectl
+kubectl logs -f -l app=tinyforge -n tinyforge
+
+# Stream logs via WebSocket
+wscat -c ws://localhost:8001/ws/logs`}
         </pre>
       </div>
     </div>

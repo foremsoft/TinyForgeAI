@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tinyforge-dashboard-api
+  namespace: tinyforge
+  labels:
+    app: tinyforge
+    component: dashboard-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: tinyforge
+      component: dashboard-api
+  template:
+    metadata:
+      labels:
+        app: tinyforge
+        component: dashboard-api
+    spec:
+      containers:
+        - name: dashboard-api
+          image: tinyforge-dashboard:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: tinyforge-dashboard-config
+            - secretRef:
+                name: tinyforge-secrets
+                optional: true
+          ports:
+            - containerPort: 8001
+              name: http
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8001
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8001
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          volumeMounts:
+            - name: data-volume
+              mountPath: /app/data
+            - name: models-volume
+              mountPath: /app/output
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: tinyforge-data-pvc
+        - name: models-volume
+          persistentVolumeClaim:
+            claimName: tinyforge-models-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tinyforge-dashboard-api
+  namespace: tinyforge
+  labels:
+    app: tinyforge
+    component: dashboard-api
+spec:
+  selector:
+    app: tinyforge
+    component: dashboard-api
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8001
+      targetPort: 8001
+  type: ClusterIP
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tinyforge-dashboard-config
+  namespace: tinyforge
+  labels:
+    app: tinyforge
+data:
+  TINYFORGE_USE_DATABASE: "true"
+  TINYFORGE_DATABASE_URL: "sqlite:////app/data/tinyforge.db"
+  TINYFORGE_AUTH_ENABLED: "true"
+  TINYFORGE_OUTPUT_DIR: "/app/output"
+  TINYFORGE_API_URL: "http://tinyforge-dashboard-api:8001"
+  LOG_LEVEL: "INFO"
