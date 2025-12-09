@@ -8,30 +8,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Initial project structure and scaffolding (Step A)
-- Backend API with FastAPI health endpoints (Step B)
-- Training pipeline with dataset loader, dry-run trainer, and PEFT/LoRA adapter (Step C)
-- Data connectors: Database, Google Docs (with mock mode), and file ingestion (Step D)
-- ONNX export and INT8 quantization stubs (Step E)
-- Microservice exporter/builder for packaging inference services (Step F)
-- CLI tool (`foremforge`) with init, train, export, and serve commands (Step F.1)
-- pytest configuration and GitHub Actions CI workflow (Step G.1)
-- Docker configuration with Dockerfile.inference and docker-compose (Step H.1)
-- Comprehensive documentation: architecture, training, connectors (Step I.1)
-- End-to-end demo scripts (bash and Python) with smoke tests (Step J.1)
-- Release preparation: packaging scaffolds, model zoo, governance files (Step K)
+- Nothing yet
 
-### Features
-- JSONL dataset loading and validation
-- Dry-run training with stub model artifacts
-- LoRA adapter simulation for PEFT workflows
-- ONNX export with quantization placeholders
-- Database connector with SQLite support
-- Google Docs connector with mock mode for offline development
-- File ingestion for TXT, MD, DOCX, PDF formats
-- Inference server template with /health and /predict endpoints
-- Docker deployment support with health checks
-- Cross-platform e2e demo (bash + Python)
+---
+
+## [0.2.0] - 2025-12-09
+
+### Added - Production Training Features
+- **Real Training with HuggingFace Transformers**: Full training pipeline using `transformers` library
+- **PEFT/LoRA Support**: Efficient fine-tuning with Low-Rank Adaptation
+- **RealTrainer Module**: `backend/training/real_trainer.py` with `TrainingConfig` dataclass
+- **RAG Document Indexer**: `connectors/indexer.py` with sentence-transformers embeddings
+- **Dashboard API**: `services/dashboard_api/` FastAPI service for monitoring
+
+### Added - Documentation & Tutorials
+- **5 Comprehensive Tutorials** in `docs/tutorials/`:
+  - 01: Introduction to AI Training (beginner-friendly)
+  - 02: Preparing Training Data (JSONL, JSON, CSV formats)
+  - 03: Training Your First Model (hands-on walkthrough)
+  - 04: Understanding LoRA (efficient fine-tuning)
+  - 05: Deploying Your Model (local, Docker, cloud)
+- **Architecture Guide**: `docs/ARCHITECTURE.md` with component diagrams
+- **Contributing Guide**: `docs/CONTRIBUTING.md` with code style and PR process
+
+### Added - Examples & Demo
+- **Complete Demo Script**: `demo.py` - end-to-end demonstration
+- **Training Quick Start**: `examples/training/quick_start.py`
+- **LoRA Training Example**: `examples/training/lora_training.py`
+- **Custom Dataset Example**: `examples/training/custom_dataset.py`
+- **Evaluation Example**: `examples/training/evaluation.py`
+- **RAG Quick Start**: `examples/rag/quick_start_rag.py`
+- **Sample Training Data**: `examples/training/sample_data.jsonl`
+
+### Added - DevOps & CI/CD
+- **Docker Build Workflow**: `.github/workflows/docker_build.yml`
+- **Root Dockerfile**: Multi-stage build for production
+- **Updated CI Workflow**: pyproject.toml installation, import tests
+- **Environment Template**: `.env.example` with all configuration options
+
+### Changed
+- Updated README.md with tutorials, examples, and new features
+- Updated `pyproject.toml` with training and RAG dependencies
+- Updated GitHub links to foremsoft organization
+- Expanded test suite to 260+ tests
+
+### Fixed
+- CI workflow now uses pyproject.toml for installation
+
+---
 
 ## [0.1.0] - 2025-01-15
 
@@ -43,5 +67,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comprehensive test suite (215+ tests)
 - Full documentation
 
-[Unreleased]: https://github.com/anthropics/TinyForgeAI/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/anthropics/TinyForgeAI/releases/tag/v0.1.0
+[Unreleased]: https://github.com/foremsoft/TinyForgeAI/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/foremsoft/TinyForgeAI/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/foremsoft/TinyForgeAI/releases/tag/v0.1.0

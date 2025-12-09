@@ -1,103 +1,163 @@
 # TinyForgeAI Dashboard
 
-A React-based web dashboard for managing TinyForgeAI training and inference services.
+A lightweight web dashboard for managing TinyForgeAI training jobs, models, and RAG search.
 
 ## Features
 
-- **Train Page**: Configure and run model training (dry-run or real)
-- **Services Page**: Manage deployed inference services
-- **Playground Page**: Test inference endpoints interactively
-- **Logs Page**: View service logs with filtering
+- **Overview**: Dashboard statistics and quick actions
+- **Training Jobs**: Create and monitor training jobs
+- **Models**: View and deploy trained models
+- **RAG Search**: Search indexed documents
 
 ## Quick Start
 
-### Prerequisites
-
-- Node.js 18+ or 20+
-- npm or yarn
-
-### Installation
+### Option 1: Serve with Python (No dependencies)
 
 ```bash
+# From the dashboard directory
 cd dashboard
-npm install
+python -m http.server 3000
+
+# Open http://localhost:3000
 ```
 
-### Development
+### Option 2: Serve with the Dashboard API
+
+The dashboard is designed to work with the Dashboard API backend:
 
 ```bash
-npm run dev
+# Start the dashboard API (from project root)
+uvicorn services.dashboard_api.main:app --reload --port 8001
+
+# Serve the dashboard
+cd dashboard
+python -m http.server 3000
 ```
 
-Open http://localhost:3000 in your browser.
+### Option 3: Use with FastAPI Static Files
 
-### Build for Production
+The Dashboard API can serve the dashboard directly:
 
-```bash
-npm run build
-npm run preview
+```python
+from fastapi.staticfiles import StaticFiles
+
+app.mount("/dashboard", StaticFiles(directory="dashboard", html=True), name="dashboard")
 ```
 
 ## Project Structure
 
 ```
 dashboard/
-├── src/
-│   ├── main.jsx          # Entry point
-│   ├── App.jsx           # Main app with routing
-│   └── pages/
-│       ├── TrainPage.jsx     # Training configuration
-│       ├── ServicesPage.jsx  # Service management
-│       ├── PlaygroundPage.jsx # API testing
-│       └── LogsPage.jsx      # Log viewer
-├── index.html
-├── package.json
-├── vite.config.js
-└── README.md
+├── index.html      # Main HTML file
+├── styles.css      # CSS styles
+├── app.js          # JavaScript application
+└── README.md       # This file
 ```
 
-## API Integration
+## Configuration
 
-The dashboard is configured to proxy API requests to `http://localhost:8000` (see `vite.config.js`).
+### API URL
 
-To connect to a running TinyForgeAI service:
+By default, the dashboard connects to `http://localhost:8001` (Dashboard API).
 
-1. Start an inference service:
-   ```bash
-   foremforge serve --dir ./my_service --port 8000
-   ```
-
-2. The Playground page will automatically connect to `http://localhost:8000/predict`
-
-## Customization
-
-### Changing the API URL
-
-Edit `vite.config.js`:
+To change this, edit `app.js`:
 
 ```javascript
-server: {
-  proxy: {
-    '/api': {
-      target: 'http://your-api-server:8000',
-      changeOrigin: true,
-    }
-  }
-}
+const API_BASE_URL = 'http://your-api-server:8001';
 ```
 
-### Adding New Pages
+## Pages
 
-1. Create a new component in `src/pages/`
-2. Add a route in `src/App.jsx`
-3. Add navigation link in the nav bar
+### Overview
+- Statistics cards (jobs, models, documents, requests)
+- Quick action buttons
+- Recent activity feed
+
+### Training Jobs
+- List of training jobs with status
+- Create new jobs with configuration
+- Progress tracking
+
+### Models
+- Grid of trained models
+- Download and deploy options
+- Model metadata
+
+### RAG Search
+- Full-text search across indexed documents
+- Search results with relevance scores
+- Index statistics
+
+## API Endpoints Used
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/health` | GET | Health check |
+| `/api/stats` | GET | Dashboard statistics |
+| `/api/jobs` | GET | List training jobs |
+| `/api/jobs` | POST | Create training job |
+| `/api/models` | GET | List trained models |
+| `/api/search` | GET | Search documents |
+
+## Development
+
+### Running Locally
+
+1. Start the Dashboard API:
+   ```bash
+   make dashboard
+   # or
+   uvicorn services.dashboard_api.main:app --reload --port 8001
+   ```
+
+2. Serve the dashboard:
+   ```bash
+   cd dashboard
+   python -m http.server 3000
+   ```
+
+3. Open http://localhost:3000
+
+### Customization
+
+The dashboard uses vanilla HTML/CSS/JavaScript for simplicity:
+
+- **Styling**: Edit `styles.css` - uses CSS custom properties for theming
+- **Behavior**: Edit `app.js` - all JavaScript in one file
+- **Structure**: Edit `index.html` - standard HTML
+
+### Adding a New Page
+
+1. Add navigation link in `index.html`:
+   ```html
+   <a href="#" class="nav-link" data-page="newpage">New Page</a>
+   ```
+
+2. Add page section:
+   ```html
+   <section id="page-newpage" class="page">
+       <h2>New Page</h2>
+       <!-- Content -->
+   </section>
+   ```
+
+3. The navigation is handled automatically by `app.js`
 
 ## Tech Stack
 
-- React 18
-- React Router 6
-- Vite 5
+- HTML5
+- CSS3 (with CSS Custom Properties)
+- Vanilla JavaScript (ES6+)
+- No build tools required
+- No npm/node dependencies
+
+## Browser Support
+
+- Chrome 80+
+- Firefox 75+
+- Safari 13+
+- Edge 80+
 
 ## Contributing
 
-See the main [CONTRIBUTING.md](../CONTRIBUTING.md) for guidelines.
+See the main [CONTRIBUTING.md](../docs/CONTRIBUTING.md) for guidelines.
