@@ -1,15 +1,23 @@
 /**
  * TinyForgeAI Dashboard Application
  * Vanilla JavaScript frontend for the dashboard API
+ * Includes WebSocket support for real-time updates
  */
 
 // Configuration
 const API_BASE_URL = 'http://localhost:8001';
+const WS_BASE_URL = 'ws://localhost:8001';
 
 // State
 let currentPage = 'overview';
 let jobs = [];
 let models = [];
+
+// WebSocket connections
+let jobsWs = null;
+let logsWs = null;
+let wsReconnectAttempts = 0;
+const MAX_RECONNECT_ATTEMPTS = 5;
 
 // =============================================================================
 // Initialization
@@ -19,10 +27,172 @@ document.addEventListener('DOMContentLoaded', () => {
     initNavigation();
     checkAPIConnection();
     refreshStats();
+    initWebSocket();
 
-    // Auto-refresh every 30 seconds
+    // Auto-refresh every 30 seconds (as fallback if WebSocket disconnects)
     setInterval(refreshStats, 30000);
 });
+
+// =============================================================================
+// WebSocket Connection
+// =============================================================================
+
+function initWebSocket() {
+    connectJobsWebSocket();
+    connectLogsWebSocket();
+}
+
+function connectJobsWebSocket() {
+    if (jobsWs && jobsWs.readyState === WebSocket.OPEN) {
+        return;
+    }
+
+    try {
+        jobsWs = new WebSocket(`${WS_BASE_URL}/ws/jobs`);
+
+        jobsWs.onopen = () => {
+            console.log('Jobs WebSocket connected');
+            wsReconnectAttempts = 0;
+            addActivity('Real-time updates connected', '&#128994;');
+        };
+
+        jobsWs.onmessage = (event) => {
+            const message = JSON.parse(event.data);
+            handleJobsMessage(message);
+        };
+
+        jobsWs.onclose = () => {
+            console.log('Jobs WebSocket disconnected');
+            scheduleReconnect(connectJobsWebSocket);
+        };
+
+        jobsWs.onerror = (error) => {
+            console.error('Jobs WebSocket error:', error);
+        };
+
+        // Send ping every 30 seconds to keep connection alive
+        setInterval(() => {
+            if (jobsWs && jobsWs.readyState === WebSocket.OPEN) {
+                jobsWs.send(JSON.stringify({ type: 'ping' }));
+            }
+        }, 30000);
+
+    } catch (error) {
+        console.error('Failed to connect Jobs WebSocket:', error);
+    }
+}
+
+function connectLogsWebSocket() {
+    if (logsWs && logsWs.readyState === WebSocket.OPEN) {
+        return;
+    }
+
+    try {
+        logsWs = new WebSocket(`${WS_BASE_URL}/ws/logs`);
+
+        logsWs.onopen = () => {
+            console.log('Logs WebSocket connected');
+        };
+
+        logsWs.onmessage = (event) => {
+            const message = JSON.parse(event.data);
+            handleLogsMessage(message);
+        };
+
+        logsWs.onclose = () => {
+            console.log('Logs WebSocket disconnected');
+            scheduleReconnect(connectLogsWebSocket);
+        };
+
+        logsWs.onerror = (error) => {
+            console.error('Logs WebSocket error:', error);
+        };
+
+    } catch (error) {
+        console.error('Failed to connect Logs WebSocket:', error);
+    }
+}
+
+function scheduleReconnect(connectFn) {
+    if (wsReconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+        wsReconnectAttempts++;
+        const delay = Math.min(1000 * Math.pow(2, wsReconnectAttempts), 30000);
+        console.log(`Reconnecting in ${delay}ms (attempt ${wsReconnectAttempts})`);
+        setTimeout(connectFn, delay);
+    } else {
+        console.log('Max reconnection attempts reached');
+        addActivity('Real-time updates disconnected', '&#128308;');
+    }
+}
+
+function handleJobsMessage(message) {
+    switch (message.type) {
+        case 'initial_jobs':
+            // Initial jobs list received
+            jobs = message.data;
+            if (currentPage === 'jobs') {
+                renderJobsTable();
+            }
+            break;
+
+        case 'job_update':
+            // Job progress update
+            updateJobInList(message.data);
+            if (currentPage === 'jobs') {
+                renderJobsTable();
+            }
+            // Update stats
+            refreshStats();
+            // Add activity for status changes
+            if (message.data.status === 'completed') {
+                addActivity(`Job completed: ${message.data.name}`, '&#9989;');
+                showToast(`Training job "${message.data.name}" completed!`, 'success');
+            } else if (message.data.status === 'failed') {
+                addActivity(`Job failed: ${message.data.name}`, '&#10060;');
+                showToast(`Training job "${message.data.name}" failed`, 'error');
+            }
+            break;
+
+        case 'job_detail':
+            // Detailed job info (for subscribed job)
+            console.log('Job detail:', message.data);
+            break;
+
+        case 'pong':
+            // Keep-alive response
+            break;
+    }
+}
+
+function handleLogsMessage(message) {
+    if (message.type === 'log') {
+        const log = message.data;
+        // Add important logs to activity feed
+        if (log.level === 'INFO' || log.level === 'ERROR' || log.level === 'WARN') {
+            const icon = log.level === 'ERROR' ? '&#10060;' :
+                         log.level === 'WARN' ? '&#9888;' : '&#128994;';
+            addActivity(log.message, icon);
+        }
+    }
+}
+
+function updateJobInList(jobData) {
+    const index = jobs.findIndex(j => j.id === jobData.id);
+    if (index >= 0) {
+        jobs[index] = { ...jobs[index], ...jobData };
+    } else {
+        jobs.unshift(jobData);
+    }
+}
+
+function subscribeToJob(jobId) {
+    if (jobsWs && jobsWs.readyState === WebSocket.OPEN) {
+        jobsWs.send(JSON.stringify({
+            type: 'subscribe_job',
+            job_id: jobId
+        }));
+    }
+}
 
 // =============================================================================
 // Navigation
@@ -139,44 +309,65 @@ function addActivity(text, icon = '&#128994;') {
 // =============================================================================
 
 async function loadJobs() {
-    const tbody = document.getElementById('jobs-table-body');
-
     try {
         const response = await apiRequest('/api/jobs');
-        jobs = response.jobs || [];
-
-        if (jobs.length === 0) {
+        jobs = response || [];
+        renderJobsTable();
+    } catch (error) {
+        // If WebSocket already populated jobs, use those
+        if (jobs.length > 0) {
+            renderJobsTable();
+        } else {
+            const tbody = document.getElementById('jobs-table-body');
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="6" class="empty-state">No training jobs yet. Create one to get started!</td>
+                    <td colspan="6" class="empty-state">Could not load jobs. API may be disconnected.</td>
                 </tr>
             `;
-            return;
         }
+    }
+}
 
-        tbody.innerHTML = jobs.map(job => `
-            <tr>
-                <td>${job.id}</td>
-                <td>${job.model}</td>
-                <td><span class="status-badge ${job.status}">${job.status}</span></td>
-                <td>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: ${job.progress || 0}%"></div>
-                    </div>
-                </td>
-                <td>${formatDate(job.created_at)}</td>
-                <td>
-                    <button class="action-btn" onclick="viewJob('${job.id}')">View</button>
-                </td>
-            </tr>
-        `).join('');
-    } catch (error) {
-        // Show mock data
+function renderJobsTable() {
+    const tbody = document.getElementById('jobs-table-body');
+
+    if (jobs.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="6" class="empty-state">Could not load jobs. API may be disconnected.</td>
+                <td colspan="6" class="empty-state">No training jobs yet. Create one to get started!</td>
             </tr>
         `;
+        return;
+    }
+
+    tbody.innerHTML = jobs.map(job => `
+        <tr data-job-id="${job.id}">
+            <td>${job.id}</td>
+            <td>${job.model_name || job.model || 'N/A'}</td>
+            <td><span class="status-badge ${job.status}">${job.status}</span></td>
+            <td>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: ${job.progress || 0}%"></div>
+                </div>
+                <span class="progress-text">${(job.progress || 0).toFixed(1)}%</span>
+            </td>
+            <td>${formatDate(job.created_at)}</td>
+            <td>
+                <button class="action-btn" onclick="viewJob('${job.id}')">View</button>
+                ${job.status === 'pending' || job.status === 'running' ?
+                    `<button class="action-btn" onclick="cancelJob('${job.id}')">Cancel</button>` : ''}
+            </td>
+        </tr>
+    `).join('');
+}
+
+async function cancelJob(jobId) {
+    try {
+        await apiRequest(`/api/jobs/${jobId}/cancel`, { method: 'POST' });
+        showToast('Job cancelled', 'success');
+        loadJobs();
+    } catch (error) {
+        showToast('Failed to cancel job', 'error');
     }
 }
 
@@ -400,7 +591,9 @@ window.showNewJobModal = showNewJobModal;
 window.closeModal = closeModal;
 window.createJob = createJob;
 window.viewJob = viewJob;
+window.cancelJob = cancelJob;
 window.refreshStats = refreshStats;
 window.searchDocuments = searchDocuments;
 window.downloadModel = downloadModel;
 window.deployModel = deployModel;
+window.subscribeToJob = subscribeToJob;

@@ -2,23 +2,35 @@
 TinyForgeAI Dashboard API
 
 FastAPI backend for managing training jobs, services, and model inference.
+Includes WebSocket support for real-time training progress updates.
 """
 
+import asyncio
+import json
 import os
 import uuid
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Set
 
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import FastAPI, HTTPException, BackgroundTasks, WebSocket, WebSocketDisconnect, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+
+# Import authentication
+from services.dashboard_api.auth import (
+    require_auth,
+    get_auth_status,
+    token_auth,
+    verify_basic_credentials,
+    AUTH_ENABLED,
+)
 
 app = FastAPI(
     title="TinyForgeAI Dashboard API",
     description="Backend API for TinyForgeAI SaaS Dashboard",
-    version="0.1.0",
+    version="0.2.0",
 )
 
 # CORS for React frontend
@@ -147,17 +159,94 @@ services_db: Dict[str, Service] = {}
 logs_db: List[LogEntry] = []
 
 
+# ============================================
+# WebSocket Connection Manager
+# ============================================
+
+class ConnectionManager:
+    """Manages WebSocket connections for real-time updates."""
+
+    def __init__(self):
+        self.active_connections: Dict[str, Set[WebSocket]] = {
+            "jobs": set(),
+            "logs": set(),
+            "stats": set(),
+        }
+
+    async def connect(self, websocket: WebSocket, channel: str = "jobs"):
+        """Accept a new WebSocket connection."""
+        await websocket.accept()
+        if channel not in self.active_connections:
+            self.active_connections[channel] = set()
+        self.active_connections[channel].add(websocket)
+
+    def disconnect(self, websocket: WebSocket, channel: str = "jobs"):
+        """Remove a WebSocket connection."""
+        if channel in self.active_connections:
+            self.active_connections[channel].discard(websocket)
+
+    async def broadcast(self, message: dict, channel: str = "jobs"):
+        """Broadcast a message to all connections in a channel."""
+        if channel not in self.active_connections:
+            return
+
+        disconnected = set()
+        for connection in self.active_connections[channel]:
+            try:
+                await connection.send_json(message)
+            except Exception:
+                disconnected.add(connection)
+
+        # Clean up disconnected clients
+        for conn in disconnected:
+            self.active_connections[channel].discard(conn)
+
+    async def send_job_update(self, job: TrainingJob):
+        """Send a job update to all subscribed clients."""
+        await self.broadcast({
+            "type": "job_update",
+            "data": {
+                "id": job.id,
+                "name": job.name,
+                "status": job.status.value,
+                "progress": job.progress,
+                "model_name": job.model_name,
+            }
+        }, channel="jobs")
+
+    async def send_log(self, log: LogEntry):
+        """Send a log entry to all subscribed clients."""
+        await self.broadcast({
+            "type": "log",
+            "data": {
+                "timestamp": log.timestamp.isoformat(),
+                "level": log.level,
+                "source": log.source,
+                "message": log.message,
+            }
+        }, channel="logs")
+
+
+# Global connection manager
+ws_manager = ConnectionManager()
+
+
 def add_log(level: str, source: str, message: str):
-    """Add a log entry."""
-    logs_db.append(LogEntry(
+    """Add a log entry and broadcast to WebSocket clients."""
+    log_entry = LogEntry(
         timestamp=datetime.utcnow(),
         level=level,
         source=source,
         message=message
-    ))
+    )
+    logs_db.append(log_entry)
+
     # Keep only last 1000 logs
     if len(logs_db) > 1000:
         logs_db.pop(0)
+
+    # Broadcast log to WebSocket clients (fire and forget)
+    asyncio.create_task(ws_manager.send_log(log_entry))
 
 
 # ============================================
@@ -414,15 +503,81 @@ async def get_logs(
 
 
 # ============================================
+# Authentication Endpoints
+# ============================================
+
+class LoginRequest(BaseModel):
+    """Login request."""
+    username: str
+    password: str
+
+
+class LoginResponse(BaseModel):
+    """Login response."""
+    token: str
+    username: str
+    expires_in: int = 86400  # 24 hours
+
+
+@app.get("/api/auth/status", tags=["Authentication"])
+async def auth_status():
+    """
+    Get authentication status.
+    Returns whether auth is enabled and what methods are available.
+    """
+    return get_auth_status()
+
+
+@app.post("/api/auth/login", response_model=LoginResponse, tags=["Authentication"])
+async def login(request: LoginRequest):
+    """
+    Login with username and password.
+    Returns a session token for subsequent requests.
+    """
+    if not verify_basic_credentials(request.username, request.password):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid username or password",
+        )
+
+    token = token_auth.create_token(request.username)
+    add_log("INFO", "auth", f"User logged in: {request.username}")
+
+    return LoginResponse(
+        token=token,
+        username=request.username,
+    )
+
+
+@app.post("/api/auth/logout", tags=["Authentication"])
+async def logout(token: str):
+    """Logout and revoke session token."""
+    if token_auth.revoke_token(token):
+        add_log("INFO", "auth", "User logged out")
+        return {"message": "Logged out successfully"}
+    raise HTTPException(status_code=400, detail="Invalid token")
+
+
+@app.get("/api/auth/verify", tags=["Authentication"])
+async def verify_token_endpoint(token: str):
+    """Verify if a token is valid."""
+    username = token_auth.verify_token(token)
+    if username:
+        return {"valid": True, "username": username}
+    return {"valid": False}
+
+
+# ============================================
 # Health Check
 # ============================================
 
 @app.get("/health", tags=["Health"])
 async def health_check():
-    """Health check endpoint."""
+    """Health check endpoint (no auth required)."""
     return {
         "status": "healthy",
-        "version": "0.1.0",
+        "version": "0.2.0",
+        "auth_enabled": AUTH_ENABLED,
         "jobs_count": len(jobs_db),
         "services_count": len(services_db),
     }
@@ -430,12 +585,161 @@ async def health_check():
 
 @app.get("/", tags=["Root"])
 async def root():
-    """API root."""
+    """API root (no auth required)."""
     return {
         "name": "TinyForgeAI Dashboard API",
-        "version": "0.1.0",
+        "version": "0.2.0",
         "docs": "/docs",
+        "websocket": "/ws/{channel}",
+        "auth_enabled": AUTH_ENABLED,
     }
+
+
+# ============================================
+# WebSocket Endpoints
+# ============================================
+
+@app.websocket("/ws/{channel}")
+async def websocket_endpoint(websocket: WebSocket, channel: str):
+    """
+    WebSocket endpoint for real-time updates.
+
+    Channels:
+    - jobs: Training job progress updates
+    - logs: Real-time log streaming
+    - stats: Dashboard statistics updates
+
+    Example client connection (JavaScript):
+    ```javascript
+    const ws = new WebSocket('ws://localhost:8001/ws/jobs');
+    ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        console.log('Update:', data);
+    };
+    ```
+    """
+    if channel not in ["jobs", "logs", "stats"]:
+        await websocket.close(code=4000, reason=f"Invalid channel: {channel}")
+        return
+
+    await ws_manager.connect(websocket, channel)
+    add_log("INFO", "websocket", f"Client connected to channel: {channel}")
+
+    try:
+        # Send initial state based on channel
+        if channel == "jobs":
+            # Send current jobs list
+            jobs_list = [
+                {
+                    "id": j.id,
+                    "name": j.name,
+                    "status": j.status.value,
+                    "progress": j.progress,
+                    "model_name": j.model_name,
+                }
+                for j in jobs_db.values()
+            ]
+            await websocket.send_json({"type": "initial_jobs", "data": jobs_list})
+
+        elif channel == "stats":
+            # Send current stats
+            jobs = list(jobs_db.values())
+            services = list(services_db.values())
+            stats = {
+                "total_jobs": len(jobs),
+                "running_jobs": len([j for j in jobs if j.status == JobStatus.RUNNING]),
+                "completed_jobs": len([j for j in jobs if j.status == JobStatus.COMPLETED]),
+                "total_services": len(services),
+                "running_services": len([s for s in services if s.status == ServiceStatus.RUNNING]),
+            }
+            await websocket.send_json({"type": "initial_stats", "data": stats})
+
+        # Keep connection open and handle incoming messages
+        while True:
+            try:
+                data = await websocket.receive_text()
+                message = json.loads(data)
+
+                # Handle ping/pong for connection keep-alive
+                if message.get("type") == "ping":
+                    await websocket.send_json({"type": "pong"})
+
+                # Handle subscription to specific job
+                elif message.get("type") == "subscribe_job":
+                    job_id = message.get("job_id")
+                    if job_id and job_id in jobs_db:
+                        job = jobs_db[job_id]
+                        await websocket.send_json({
+                            "type": "job_detail",
+                            "data": {
+                                "id": job.id,
+                                "name": job.name,
+                                "status": job.status.value,
+                                "progress": job.progress,
+                                "model_name": job.model_name,
+                                "config": job.config,
+                                "created_at": job.created_at.isoformat(),
+                            }
+                        })
+
+            except json.JSONDecodeError:
+                await websocket.send_json({"type": "error", "message": "Invalid JSON"})
+
+    except WebSocketDisconnect:
+        ws_manager.disconnect(websocket, channel)
+        add_log("INFO", "websocket", f"Client disconnected from channel: {channel}")
+
+
+@app.post("/api/jobs/{job_id}/progress", tags=["Training"])
+async def update_job_progress(job_id: str, progress: float):
+    """
+    Update training job progress (called by training worker).
+
+    This endpoint is typically called by the training process to report
+    progress updates, which are then broadcast to WebSocket clients.
+    """
+    if job_id not in jobs_db:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    job = jobs_db[job_id]
+    job.progress = min(max(progress, 0.0), 100.0)
+
+    # Start job if it was pending
+    if job.status == JobStatus.PENDING and progress > 0:
+        job.status = JobStatus.RUNNING
+        job.started_at = datetime.utcnow()
+
+    # Complete job if progress reaches 100
+    if progress >= 100.0:
+        job.status = JobStatus.COMPLETED
+        job.completed_at = datetime.utcnow()
+        add_log("INFO", "jobs", f"Training job completed: {job.name} ({job_id})")
+
+    # Broadcast update to WebSocket clients
+    await ws_manager.send_job_update(job)
+
+    return {"status": "updated", "progress": job.progress}
+
+
+@app.post("/api/jobs/{job_id}/fail", tags=["Training"])
+async def fail_job(job_id: str, error_message: str = "Unknown error"):
+    """
+    Mark a training job as failed (called by training worker).
+    """
+    if job_id not in jobs_db:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    job = jobs_db[job_id]
+    job.status = JobStatus.FAILED
+    job.error_message = error_message
+    job.completed_at = datetime.utcnow()
+
+    add_log("ERROR", "jobs", f"Training job failed: {job.name} ({job_id}) - {error_message}")
+
+    # Broadcast update to WebSocket clients
+    await ws_manager.send_job_update(job)
+
+    return {"status": "failed", "error_message": error_message}
 
 
 # ============================================
@@ -444,4 +748,4 @@ async def root():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8080)
+    uvicorn.run(app, host="0.0.0.0", port=8001)

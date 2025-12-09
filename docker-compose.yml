@@ -1,0 +1,163 @@
+# TinyForgeAI Docker Compose - Full Stack
+#
+# Orchestrates all TinyForgeAI services:
+# - Dashboard API (backend)
+# - Dashboard UI (frontend)
+# - Inference Server
+# - Optional: Training Worker
+#
+# Usage:
+#   docker-compose up --build           # Start all services
+#   docker-compose up -d                # Start in background
+#   docker-compose up dashboard-api     # Start specific service
+#   docker-compose logs -f              # View logs
+#   docker-compose down                 # Stop all services
+#
+# Production:
+#   docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+version: "3.8"
+
+services:
+  # ==========================================================================
+  # Dashboard API - FastAPI backend with WebSocket support
+  # ==========================================================================
+  dashboard-api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dashboard
+    container_name: tinyforge-dashboard-api
+    ports:
+      - "8001:8001"
+    volumes:
+      # Mount models directory for serving trained models
+      - ./models:/app/models:rw
+      # Mount data directory for training data
+      - ./data:/app/data:ro
+      # Mount output directory for training results
+      - ./output:/app/output:rw
+    environment:
+      - TINYFORGE_DASHBOARD_PORT=8001
+      - TINYFORGE_MODEL_DIR=/app/models
+      - TINYFORGE_DATA_DIR=/app/data
+      - TINYFORGE_OUTPUT_DIR=/app/output
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=INFO
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - tinyforge-network
+
+  # ==========================================================================
+  # Dashboard UI - Static file server for web dashboard
+  # ==========================================================================
+  dashboard-ui:
+    image: nginx:alpine
+    container_name: tinyforge-dashboard-ui
+    ports:
+      - "3000:80"
+    volumes:
+      - ./dashboard:/usr/share/nginx/html:ro
+      - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - dashboard-api
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - tinyforge-network
+
+  # ==========================================================================
+  # Inference Server - Model serving endpoint
+  # ==========================================================================
+  inference:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tinyforge-inference
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount model registry for inference
+      - ./models:/app/models:ro
+      - ./output:/app/output:ro
+    environment:
+      - TINYFORGE_PORT=8000
+      - MODEL_DIR=/app/models
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=INFO
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
+    networks:
+      - tinyforge-network
+
+  # ==========================================================================
+  # Training Worker - Background training job processor (optional)
+  # ==========================================================================
+  training-worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.training
+    container_name: tinyforge-training-worker
+    volumes:
+      # Mount data for training
+      - ./data:/app/data:ro
+      # Mount output for saving models
+      - ./output:/app/output:rw
+      # Mount models directory
+      - ./models:/app/models:rw
+      # Optional: Mount HuggingFace cache for faster model downloads
+      - hf-cache:/root/.cache/huggingface
+    environment:
+      - TINYFORGE_DASHBOARD_URL=http://dashboard-api:8001
+      - TINYFORGE_DATA_DIR=/app/data
+      - TINYFORGE_OUTPUT_DIR=/app/output
+      - TINYFORGE_MODEL_DIR=/app/models
+      - PYTHONUNBUFFERED=1
+      - HF_HOME=/root/.cache/huggingface
+      # GPU settings (uncomment for GPU support)
+      # - NVIDIA_VISIBLE_DEVICES=all
+    depends_on:
+      - dashboard-api
+    # Uncomment for GPU support
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+    restart: "no"  # Training workers run once per job
+    networks:
+      - tinyforge-network
+    profiles:
+      - training  # Only start when explicitly requested
+
+# ==========================================================================
+# Networks
+# ==========================================================================
+networks:
+  tinyforge-network:
+    name: tinyforge-network
+    driver: bridge
+
+# ==========================================================================
+# Volumes
+# ==========================================================================
+volumes:
+  # HuggingFace cache for model downloads
+  hf-cache:
+    name: tinyforge-hf-cache

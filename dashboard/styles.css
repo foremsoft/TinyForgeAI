@@ -344,6 +344,12 @@ h3 {
     transition: width 0.3s;
 }
 
+.progress-text {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-left: 8px;
+}
+
 /* Models Grid */
 .models-grid {
     display: grid;

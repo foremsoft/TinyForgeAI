@@ -1,0 +1,59 @@
+# TinyForgeAI Training Worker Dockerfile
+# Full ML environment for model training
+
+FROM python:3.11-slim as builder
+
+WORKDIR /app
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create virtual environment
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Copy and install dependencies
+COPY requirements.txt pyproject.toml ./
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu && \
+    pip install --no-cache-dir transformers datasets peft accelerate && \
+    pip install --no-cache-dir sentence-transformers && \
+    pip install --no-cache-dir requests
+
+# ==================================================
+# Runtime stage
+# ==================================================
+FROM python:3.11-slim as runtime
+
+WORKDIR /app
+
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Copy virtual environment
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Copy application code
+COPY backend/ ./backend/
+COPY connectors/ ./connectors/
+COPY services/ ./services/
+
+# Create directories
+RUN mkdir -p /app/models /app/data /app/output /root/.cache/huggingface
+
+# Environment
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    HF_HOME=/root/.cache/huggingface
+
+# No health check for training worker (it's a job, not a service)
+
+# Default: run training demo
+CMD ["python", "-c", "print('Training worker ready. Use docker-compose run training-worker python your_script.py')"]
