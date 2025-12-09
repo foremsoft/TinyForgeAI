@@ -1,9 +1,10 @@
 # TinyForgeAI
 
-[![CI](https://github.com/anthropics/TinyForgeAI/actions/workflows/ci.yml/badge.svg)](https://github.com/anthropics/TinyForgeAI/actions/workflows/ci.yml)
+[![CI](https://github.com/foremsoft/TinyForgeAI/actions/workflows/ci.yml/badge.svg)](https://github.com/foremsoft/TinyForgeAI/actions/workflows/ci.yml)
+[![Docker](https://github.com/foremsoft/TinyForgeAI/actions/workflows/docker_build.yml/badge.svg)](https://github.com/foremsoft/TinyForgeAI/actions/workflows/docker_build.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Release](https://img.shields.io/badge/release-v0.1.0-green.svg)](https://github.com/anthropics/TinyForgeAI/releases)
+[![Release](https://img.shields.io/badge/release-v0.1.0-green.svg)](https://github.com/foremsoft/TinyForgeAI/releases)
 
 **Tiny language models — trained from your data — deployed as microservices in seconds.**
 
@@ -26,13 +27,20 @@ TinyForgeAI gives you **your own small, focused language model** trained only on
 
 ### Train Tiny Language Models From Your Data
 - Works with DBs, Google Docs (mock mode), PDFs, DOCX, TXT/MD, APIs
-- Dry-run mode instantly simulates fine-tuning (for rapid prototyping)
-- PEFT/LoRA adapter stub included for upgrading to real training later
+- **Real training** with HuggingFace Transformers + PEFT/LoRA support
+- Dry-run mode for rapid prototyping without GPU
+- Support for DistilBERT, GPT-2, Llama, and other HuggingFace models
+
+### RAG (Retrieval-Augmented Generation)
+- Document indexing with sentence-transformers embeddings
+- Semantic search across your documents
+- Easy integration with training pipeline
 
 ### Auto-Generate Microservice
-- Export to ONNX (stub)
-- Quantization stub
+- Export to ONNX for optimized inference
+- Quantization support for smaller models
 - Generates complete FastAPI service + Dockerfile + docker-compose
+- Dashboard API for monitoring and management
 
 ### FOREMForge CLI
 
@@ -97,41 +105,75 @@ Runs: Dataset → Training → Export → Smoke-test inference.
 
 ## Quickstart
 
-### 1. Install dependencies
+### 1. Install
 
 ```bash
-pip install -r requirements.txt
+# Basic installation
+pip install -e .
+
+# With training support (PyTorch, Transformers, PEFT)
+pip install -e ".[training]"
+
+# With RAG support (sentence-transformers)
+pip install -e ".[rag]"
+
+# Everything
+pip install -e ".[all]"
 ```
 
-### 2. Train (Dry-Run)
+### 2. Train a Model
 
+**Quick Start (Real Training):**
+```bash
+python examples/training/quick_start.py
+```
+
+**Or use the CLI (Dry-Run):**
 ```bash
 foremforge train --data examples/data/demo_dataset.jsonl --out tmp/model --dry-run
 ```
 
-### 3. Export as microservice
+**Python API:**
+```python
+from backend.training.real_trainer import RealTrainer, TrainingConfig
 
-```bash
-foremforge export --model tmp/model/model_stub.json --out tmp/service --overwrite --export-onnx
+config = TrainingConfig(
+    model_name="distilbert-base-uncased",
+    output_dir="./my_model",
+    num_epochs=3,
+    batch_size=8,
+    use_lora=True,  # Efficient fine-tuning
+)
+
+trainer = RealTrainer(config)
+trainer.train("data.jsonl")
 ```
 
-### 4. Test inference
+### 3. RAG Document Indexing
 
 ```python
-from fastapi.testclient import TestClient
-import importlib.util, sys, pathlib
+from connectors.indexer import DocumentIndexer, IndexerConfig
 
-service_path = pathlib.Path("tmp/service/app.py")
-spec = importlib.util.spec_from_file_location("service_app", service_path)
-mod = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(mod)
+indexer = DocumentIndexer(IndexerConfig())
+indexer.index_file("documents/manual.pdf")
 
-client = TestClient(mod.app)
-print(client.post("/predict", json={"input": "hello"}).json())
-# Output: {"output": "olleh", "confidence": 0.75}
+results = indexer.search("How do I reset my password?", top_k=3)
+for r in results:
+    print(f"Score: {r.score:.3f} - {r.document.content[:100]}...")
 ```
 
-Or run the full demo:
+**Or run the RAG example:**
+```bash
+python examples/rag/quick_start_rag.py
+```
+
+### 4. Export & Deploy
+
+```bash
+foremforge export --model tmp/model/model_stub.json --out tmp/service --export-onnx
+```
+
+### 5. Run Demo
 
 ```bash
 # Using bash (Linux/macOS/Git Bash on Windows)
@@ -146,22 +188,30 @@ python examples/e2e_demo.py
 ```
 TinyForgeAI/
 ├── backend/
-│   ├── dataset/          # JSONL schema validation
-│   ├── trainer/          # Training pipeline (stub)
-│   ├── exporter/         # Model export and packaging
+│   ├── config/           # Configuration management (Pydantic)
+│   ├── data_processing/  # Dataset loading and file ingestion
+│   ├── training/         # Training pipeline
+│   │   ├── trainer.py    # Abstract trainer interface
+│   │   └── real_trainer.py # HuggingFace/PEFT implementation
+│   ├── model_exporter/   # ONNX export
 │   └── api/              # FastAPI application
 ├── connectors/           # Data source connectors
 │   ├── db_connector.py   # SQLite/Postgres
-│   ├── google_docs_connector.py
-│   └── file_ingest.py    # PDF/DOCX/TXT/MD
+│   ├── google_docs.py    # Google Docs integration
+│   └── indexer.py        # RAG document indexer
+├── services/             # Microservices
+│   └── dashboard_api/    # Dashboard REST API
 ├── inference_server/     # Inference service template
 ├── cli/                  # CLI tool (foremforge)
-├── examples/             # Sample data and demo scripts
+├── examples/             # Sample code
+│   ├── training/         # Training examples
+│   └── rag/              # RAG examples
 ├── docs/                 # Documentation
-├── tests/                # Test suite (215+ tests)
+│   └── tutorials/        # Step-by-step tutorials
+├── tests/                # Test suite (260+ tests)
 ├── docker/               # Docker configurations
 ├── MODEL_ZOO/            # Pre-built model examples
-└── releases/             # Release scripts
+└── .github/workflows/    # CI/CD pipelines
 ```
 
 ## Model Zoo (Starter)
@@ -196,17 +246,40 @@ The inference server will be available at `http://localhost:8000`.
 
 ## Documentation
 
-- [Architecture Guide](docs/architecture.md)
-- [Training Guide](docs/training.md)
-- [Connectors Guide](docs/connectors.md)
-- [Release Guide](docs/release.md)
-- [Launch Checklist](docs/launch.md)
-- [Developer Onboarding](docs/developer_onboarding.md)
-- [Docker Guide](docker/README.md)
+### Tutorials (Start Here!)
+
+| Tutorial | Description |
+|----------|-------------|
+| [01 - Introduction to AI Training](docs/tutorials/01-introduction-to-ai-training.md) | Beginner-friendly intro to AI concepts |
+| [02 - Preparing Training Data](docs/tutorials/02-preparing-training-data.md) | How to format your data for training |
+| [03 - Training Your First Model](docs/tutorials/03-training-your-first-model.md) | Hands-on training walkthrough |
+| [04 - Understanding LoRA](docs/tutorials/04-understanding-lora.md) | Efficient fine-tuning explained |
+| [05 - Deploying Your Model](docs/tutorials/05-deploying-your-model.md) | Local, Docker, and cloud deployment |
+
+### Reference Guides
+
+- [Architecture Guide](docs/ARCHITECTURE.md) - System design and components
+- [Contributing Guide](docs/CONTRIBUTING.md) - How to contribute
+- [Training Guide](docs/training.md) - Training details
+- [Connectors Guide](docs/connectors.md) - Data source integrations
+- [Docker Guide](docker/README.md) - Container deployment
+
+### Examples
+
+- [Training Quick Start](examples/training/quick_start.py) - Train a model in minutes
+- [RAG Quick Start](examples/rag/quick_start_rag.py) - Index and search documents
 
 ## Contributing
 
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+We welcome contributions! Please see [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) for guidelines.
+
+**Quick start for contributors:**
+```bash
+git clone https://github.com/foremsoft/TinyForgeAI.git
+cd TinyForgeAI
+pip install -e ".[all]"
+pytest  # Run tests
+```
 
 ## License
 
@@ -214,13 +287,16 @@ Apache License 2.0 - see [LICENSE](LICENSE) for details.
 
 ## Roadmap
 
-- [ ] Real ONNX export
-- [ ] True LoRA fine-tuning
-- [ ] SaaS dashboard
+- [x] Real training with HuggingFace Transformers
+- [x] LoRA/PEFT fine-tuning support
+- [x] RAG document indexing
+- [x] Comprehensive tutorials
+- [ ] Web dashboard UI
 - [ ] Model Zoo expansion
 - [ ] Multi-tenant inference service
-- [ ] Indexed & RAG-enabled inference
+- [ ] Cloud deployment templates (AWS, GCP, Azure)
+- [ ] Model evaluation benchmarks
 
 ---
 
-**GitHub:** [https://github.com/anthropics/TinyForgeAI](https://github.com/anthropics/TinyForgeAI)
+**GitHub:** [https://github.com/foremsoft/TinyForgeAI](https://github.com/foremsoft/TinyForgeAI)

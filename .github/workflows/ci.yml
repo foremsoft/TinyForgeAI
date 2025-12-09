@@ -27,10 +27,16 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -e ".[all]"
 
       - name: Run tests
-        run: pytest -q
+        run: pytest -q --tb=short
+
+      - name: Test imports
+        run: |
+          python -c "from backend.training.real_trainer import RealTrainer, TrainingConfig; print('real_trainer OK')"
+          python -c "from connectors.indexer import DocumentIndexer, IndexerConfig; print('indexer OK')"
+          python -c "from services.dashboard_api.main import app; print('dashboard_api OK')"
 
   lint:
     name: Lint Code
@@ -71,14 +77,23 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build Docker image
+      - name: Build Docker image (root Dockerfile)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          tags: foremsoft/tinyforgeai:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build Docker image (inference)
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./docker/Dockerfile
           push: false
-          tags: foremsoft/tinyforgeai:ci
+          tags: foremsoft/tinyforgeai-inference:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
-        # Allow this step to fail if Dockerfile doesn't exist yet
         continue-on-error: true
