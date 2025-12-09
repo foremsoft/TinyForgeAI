@@ -31,16 +31,33 @@ TinyForgeAI gives you **your own small, focused language model** trained only on
 - Dry-run mode for rapid prototyping without GPU
 - Support for DistilBERT, GPT-2, Llama, and other HuggingFace models
 
+### Model Zoo with Pre-configured Models
+- **13 pre-configured models** across 9 task types
+- Task types: Q&A, Summarization, Classification, Sentiment, Code Generation, Conversation, NER, Translation, Text Generation
+- CLI for browsing, selecting, and training models
+- Sample datasets included for quick experimentation
+
+### Model Evaluation & Benchmarks
+- Comprehensive evaluation metrics: BLEU, ROUGE, F1, Exact Match, Perplexity
+- Benchmark runner for comparing models on datasets
+- CLI for evaluating trained models
+
 ### RAG (Retrieval-Augmented Generation)
 - Document indexing with sentence-transformers embeddings
 - Semantic search across your documents
 - Easy integration with training pipeline
 
+### Web Dashboard
+- React-based dashboard UI for training management
+- Real-time job monitoring and logs
+- Model browsing and playground for inference testing
+- Service health monitoring
+
 ### Auto-Generate Microservice
 - Export to ONNX for optimized inference
 - Quantization support for smaller models
 - Generates complete FastAPI service + Dockerfile + docker-compose
-- Dashboard API for monitoring and management
+- Dashboard API with Prometheus metrics for monitoring
 
 ### FOREMForge CLI
 
@@ -193,33 +210,84 @@ TinyForgeAI/
 │   ├── training/         # Training pipeline
 │   │   ├── trainer.py    # Abstract trainer interface
 │   │   └── real_trainer.py # HuggingFace/PEFT implementation
+│   ├── evaluation/       # Model evaluation & benchmarks
+│   │   ├── evaluator.py  # Evaluation runner
+│   │   ├── metrics.py    # BLEU, ROUGE, F1, etc.
+│   │   └── benchmark.py  # Benchmark comparison
 │   ├── model_exporter/   # ONNX export
 │   └── api/              # FastAPI application
 ├── connectors/           # Data source connectors
 │   ├── db_connector.py   # SQLite/Postgres
 │   ├── google_docs.py    # Google Docs integration
 │   └── indexer.py        # RAG document indexer
+├── model_zoo/            # Pre-configured model registry
+│   ├── registry.py       # Model configurations (13 models)
+│   ├── cli.py            # Model Zoo CLI
+│   └── datasets/         # Sample training datasets
 ├── services/             # Microservices
-│   └── dashboard_api/    # Dashboard REST API
+│   ├── dashboard_api/    # Dashboard REST API
+│   └── training_worker/  # Async training job worker
+├── dashboard/            # React web dashboard
+│   └── src/pages/        # Train, Models, Logs, Playground
 ├── inference_server/     # Inference service template
 ├── cli/                  # CLI tool (foremforge)
+├── deploy/k8s/           # Kubernetes manifests
 ├── examples/             # Sample code
 │   ├── training/         # Training examples
 │   └── rag/              # RAG examples
 ├── docs/                 # Documentation
 │   └── tutorials/        # Step-by-step tutorials
-├── tests/                # Test suite (260+ tests)
+├── tests/                # Test suite (456+ tests)
 ├── docker/               # Docker configurations
-├── MODEL_ZOO/            # Pre-built model examples
 └── .github/workflows/    # CI/CD pipelines
 ```
 
-## Model Zoo (Starter)
+## Model Zoo
 
+Browse and train pre-configured models for various NLP tasks:
+
+```bash
+# List all available models
+python -m model_zoo.cli list
+
+# Get detailed info about a model
+python -m model_zoo.cli info qa_flan_t5_small
+
+# Train with a pre-configured model (dry run)
+python -m model_zoo.cli train qa_flan_t5_small --dry-run
+
+# Train with your own data
+python -m model_zoo.cli train summarization_t5_small --data your_data.jsonl
 ```
-MODEL_ZOO/example_tiny_model/
-├── model_card.md         # Model documentation
-└── model_stub.json       # Example model artifact
+
+**Available Task Types:**
+| Task | Models | Description |
+|------|--------|-------------|
+| Question Answering | qa_flan_t5_small, qa_flan_t5_base | Answer questions from context |
+| Summarization | summarization_t5_small, summarization_bart | Summarize long text |
+| Classification | classification_distilbert | Text classification |
+| Sentiment | sentiment_roberta | Sentiment analysis |
+| Code Generation | code_gen_small | Generate code from prompts |
+| Conversation | chat_gpt2_small, chat_dialogpt | Chatbot responses |
+| NER | ner_bert | Named entity recognition |
+| Translation | translation_en_es, translation_en_fr | Language translation |
+| Text Generation | text_gen_gpt2_medium | Open-ended text generation |
+
+## Model Evaluation
+
+Evaluate your trained models with comprehensive metrics:
+
+```bash
+# Evaluate a model on a test dataset
+python -m backend.evaluation.cli evaluate \
+    --model ./my_model \
+    --data test_data.jsonl \
+    --metrics bleu rouge f1
+
+# Run benchmarks comparing multiple models
+python -m backend.evaluation.cli benchmark \
+    --models model1 model2 \
+    --dataset benchmark_data.jsonl
 ```
 
 ## Run All Tests
@@ -291,11 +359,13 @@ Apache License 2.0 - see [LICENSE](LICENSE) for details.
 - [x] LoRA/PEFT fine-tuning support
 - [x] RAG document indexing
 - [x] Comprehensive tutorials
-- [ ] Web dashboard UI
-- [ ] Model Zoo expansion
+- [x] Model evaluation benchmarks (BLEU, ROUGE, F1, Perplexity)
+- [x] Web dashboard UI (React-based)
+- [x] Model Zoo expansion (13 pre-configured models, 9 task types)
 - [ ] Multi-tenant inference service
 - [ ] Cloud deployment templates (AWS, GCP, Azure)
-- [ ] Model evaluation benchmarks
+- [ ] A/B testing for model comparisons
+- [ ] Model versioning and registry
 
 ---
 
