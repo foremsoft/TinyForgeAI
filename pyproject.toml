@@ -60,8 +60,19 @@ pdf = [
 docx = [
     "python-docx>=1.0.0",
 ]
+training = [
+    "torch>=2.0.0",
+    "transformers>=4.35.0",
+    "datasets>=2.14.0",
+    "peft>=0.6.0",
+    "accelerate>=0.24.0",
+]
+rag = [
+    "sentence-transformers>=2.2.0",
+    "numpy>=1.24.0",
+]
 all = [
-    "tinyforgeai[dev,pdf,docx]",
+    "tinyforgeai[dev,pdf,docx,training,rag]",
 ]
 
 [project.scripts]

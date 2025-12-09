@@ -1,0 +1,14 @@
+# TinyForgeAI Dashboard API Dependencies
+
+fastapi>=0.100.0
+uvicorn>=0.20.0
+pydantic>=2.0.0
+python-multipart>=0.0.6
+
+# Optional: Database
+# sqlalchemy>=2.0.0
+# asyncpg>=0.28.0
+
+# Optional: Redis for job queue
+# redis>=5.0.0
+# rq>=1.15.0
