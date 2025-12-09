@@ -231,7 +231,12 @@ TinyForgeAI/
 │   └── src/pages/        # Train, Models, Logs, Playground
 ├── inference_server/     # Inference service template
 ├── cli/                  # CLI tool (foremforge)
-├── deploy/k8s/           # Kubernetes manifests
+├── deploy/               # Deployment configurations
+│   ├── k8s/              # Kubernetes manifests
+│   ├── helm-chart/       # Helm chart for production
+│   ├── aws/              # AWS CloudFormation + Terraform
+│   ├── gcp/              # GCP Terraform
+│   └── azure/            # Azure Terraform
 ├── examples/             # Sample code
 │   ├── training/         # Training examples
 │   └── rag/              # RAG examples
@@ -311,6 +316,29 @@ docker-compose -f docker/docker-compose.yml up --build
 ```
 
 The inference server will be available at `http://localhost:8000`.
+
+### Cloud Deployment
+
+Deploy to AWS, GCP, or Azure with Infrastructure-as-Code templates:
+
+| Cloud | IaC Tools | Guide |
+|-------|-----------|-------|
+| **AWS** | CloudFormation, Terraform | [AWS Guide](deploy/aws/README.md) |
+| **GCP** | Terraform | [GCP Guide](deploy/gcp/README.md) |
+| **Azure** | Terraform | [Azure Guide](deploy/azure/README.md) |
+
+```bash
+# AWS EKS
+cd deploy/aws/terraform && terraform init && terraform apply
+
+# GCP GKE
+cd deploy/gcp/terraform && terraform init && terraform apply
+
+# Azure AKS
+cd deploy/azure/terraform && terraform init && terraform apply
+```
+
+Each deployment includes managed Kubernetes, container registry, object storage, autoscaling, and optional GPU support.
 
 ## Documentation
 
