@@ -1,0 +1,18 @@
+apiVersion: v2
+name: tinyforge
+description: TinyForgeAI inference Helm chart
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - tinyforge
+  - inference
+  - ml
+  - machine-learning
+  - fastapi
+home: https://github.com/anthropics/TinyForgeAI
+sources:
+  - https://github.com/anthropics/TinyForgeAI
+maintainers:
+  - name: TinyForgeAI Team
+    url: https://github.com/anthropics/TinyForgeAI

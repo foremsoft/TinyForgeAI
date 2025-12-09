@@ -1,0 +1,22 @@
+# TinyForgeAI Dependencies
+# Install with: pip install -r requirements.txt
+
+# Core dependencies
+click>=8.0
+fastapi>=0.100.0
+uvicorn>=0.20.0
+pydantic>=2.0
+pydantic-settings>=2.0
+python-dotenv>=1.0
+
+# Testing
+pytest>=7.0
+httpx>=0.24
+
+# Optional: Document processing (uncomment if needed)
+# python-docx>=0.8.11
+# PyMuPDF>=1.22.0
+# pdfminer.six>=20221105
+
+# Linting (for CI)
+flake8>=6.0

@@ -1,0 +1,317 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "TinyForgeAI Inference API",
+    "version": "0.1.0",
+    "description": "REST API for TinyForgeAI inference services. Train tiny language models from your data and deploy them as microservices.",
+    "license": {
+      "name": "Apache 2.0",
+      "url": "https://www.apache.org/licenses/LICENSE-2.0"
+    },
+    "contact": {
+      "name": "TinyForgeAI",
+      "url": "https://github.com/anthropics/TinyForgeAI"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8000",
+      "description": "Local development server"
+    }
+  ],
+  "paths": {
+    "/predict": {
+      "post": {
+        "summary": "Perform inference",
+        "description": "Send input text to the model and receive a prediction with confidence score.",
+        "operationId": "predict",
+        "tags": ["Inference"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PredictRequest"
+              },
+              "examples": {
+                "simple": {
+                  "summary": "Simple text input",
+                  "value": {
+                    "input": "hello world"
+                  }
+                },
+                "question": {
+                  "summary": "Question input",
+                  "value": {
+                    "input": "What is your refund policy?"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful prediction",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PredictResponse"
+                },
+                "examples": {
+                  "success": {
+                    "summary": "Successful response",
+                    "value": {
+                      "output": "dlrow olleh",
+                      "confidence": 0.75
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - invalid JSON",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Health check",
+        "description": "Returns the health status of the service. Used for liveness probes in Kubernetes.",
+        "operationId": "health",
+        "tags": ["Health"],
+        "responses": {
+          "200": {
+            "description": "Service is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                },
+                "example": {
+                  "status": "healthy",
+                  "uptime_seconds": 3600.5
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/readyz": {
+      "get": {
+        "summary": "Readiness check",
+        "description": "Returns whether the service is ready to accept requests. Used for readiness probes in Kubernetes.",
+        "operationId": "readyz",
+        "tags": ["Health"],
+        "responses": {
+          "200": {
+            "description": "Service is ready",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadyResponse"
+                },
+                "example": {
+                  "ready": true
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service is not ready",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadyResponse"
+                },
+                "example": {
+                  "ready": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/metrics": {
+      "get": {
+        "summary": "Get metrics",
+        "description": "Returns basic service metrics including request count and uptime.",
+        "operationId": "metrics",
+        "tags": ["Monitoring"],
+        "responses": {
+          "200": {
+            "description": "Metrics response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetricsResponse"
+                },
+                "example": {
+                  "request_count": 1247,
+                  "uptime_seconds": 3600.5
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "PredictRequest": {
+        "type": "object",
+        "required": ["input"],
+        "properties": {
+          "input": {
+            "type": "string",
+            "description": "The input text for inference",
+            "example": "hello world",
+            "minLength": 1
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Optional metadata to include with the request",
+            "additionalProperties": true
+          }
+        }
+      },
+      "PredictResponse": {
+        "type": "object",
+        "properties": {
+          "output": {
+            "type": "string",
+            "description": "The model's output prediction"
+          },
+          "confidence": {
+            "type": "number",
+            "format": "float",
+            "description": "Confidence score between 0 and 1",
+            "minimum": 0,
+            "maximum": 1
+          }
+        }
+      },
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "Health status",
+            "enum": ["healthy", "unhealthy"]
+          },
+          "uptime_seconds": {
+            "type": "number",
+            "format": "float",
+            "description": "Server uptime in seconds"
+          }
+        }
+      },
+      "ReadyResponse": {
+        "type": "object",
+        "properties": {
+          "ready": {
+            "type": "boolean",
+            "description": "Whether the service is ready to accept requests"
+          }
+        }
+      },
+      "MetricsResponse": {
+        "type": "object",
+        "properties": {
+          "request_count": {
+            "type": "integer",
+            "description": "Total number of prediction requests served"
+          },
+          "uptime_seconds": {
+            "type": "number",
+            "format": "float",
+            "description": "Server uptime in seconds"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "detail": {
+            "type": "string",
+            "description": "Error message"
+          }
+        }
+      },
+      "ValidationError": {
+        "type": "object",
+        "properties": {
+          "detail": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "loc": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Location of the error"
+                },
+                "msg": {
+                  "type": "string",
+                  "description": "Error message"
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Error type"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Inference",
+      "description": "Model inference endpoints"
+    },
+    {
+      "name": "Health",
+      "description": "Health and readiness checks"
+    },
+    {
+      "name": "Monitoring",
+      "description": "Metrics and monitoring"
+    }
+  ]
+}

@@ -5,47 +5,74 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "tinyforgeai"
 version = "0.1.0"
-description = "A lightweight platform for fine-tuning language models"
+description = "A lightweight platform for fine-tuning language models and deploying them as inference microservices"
 readme = "README.md"
-requires-python = ">=3.9"
-license = {text = "MIT"}
+license = {text = "Apache-2.0"}
 authors = [
-    {name = "TinyForgeAI Team"}
+    {name = "TinyForgeAI Contributors"}
 ]
-keywords = ["machine-learning", "fine-tuning", "llm", "ai"]
+maintainers = [
+    {name = "TinyForgeAI Contributors"}
+]
+keywords = [
+    "machine-learning",
+    "fine-tuning",
+    "language-models",
+    "inference",
+    "microservices",
+    "onnx",
+    "lora",
+    "peft"
+]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
 ]
-
+requires-python = ">=3.10"
 dependencies = [
-    "click>=8.0",
+    "click>=8.0.0",
     "fastapi>=0.100.0",
     "uvicorn>=0.20.0",
-    "pydantic>=2.0",
-    "pydantic-settings>=2.0",
-    "python-dotenv>=1.0",
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    "python-dotenv>=1.0.0",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=7.0",
-    "httpx>=0.24",
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "httpx>=0.24.0",
+    "flake8>=6.0.0",
 ]
-docs = [
-    "python-docx",
-    "PyMuPDF",
+pdf = [
+    "PyMuPDF>=1.23.0",
+]
+docx = [
+    "python-docx>=1.0.0",
+]
+all = [
+    "tinyforgeai[dev,pdf,docx]",
 ]
 
-# Console scripts entry point for the CLI
-# This allows 'foremforge' command after pip install -e .
 [project.scripts]
 foremforge = "cli.foremforge:main"
+
+[project.urls]
+Homepage = "https://github.com/anthropics/TinyForgeAI"
+Documentation = "https://github.com/anthropics/TinyForgeAI/tree/main/docs"
+Repository = "https://github.com/anthropics/TinyForgeAI"
+Issues = "https://github.com/anthropics/TinyForgeAI/issues"
+Changelog = "https://github.com/anthropics/TinyForgeAI/blob/main/CHANGELOG.md"
 
 [tool.setuptools.packages.find]
 where = ["."]
@@ -55,3 +82,20 @@ include = ["cli*", "backend*", "connectors*", "inference_server*"]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_functions = ["test_*"]
+addopts = "-q --disable-warnings"
+markers = [
+    "slow: marks tests as slow",
+    "integration: marks tests as integration tests",
+]
+
+[tool.coverage.run]
+source = ["backend", "connectors", "cli", "inference_server"]
+omit = ["*/tests/*", "*/__pycache__/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]

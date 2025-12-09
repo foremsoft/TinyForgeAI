@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tinyforge-config
+  labels:
+    app: tinyforge
+data:
+  MODEL_REGISTRY_PATH: "/models"
+  INFERENCE_PORT: "8000"
+  LOG_LEVEL: "INFO"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tinyforge-model-config
+  labels:
+    app: tinyforge
+data:
+  model_stub.json: |
+    {
+      "model_type": "tinyforge_stub",
+      "model_name": "default_model",
+      "version": "0.1.0",
+      "n_records": 0,
+      "notes": "Default stub model"
+    }

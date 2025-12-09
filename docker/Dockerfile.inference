@@ -1,0 +1,50 @@
+# TinyForgeAI Inference Server Dockerfile
+#
+# Build:
+#   docker build -f docker/Dockerfile.inference -t tinyforge-inference:local .
+#
+# Run:
+#   docker run -p 8000:8000 -v ./model_registry:/app/model_registry tinyforge-inference:local
+
+FROM python:3.11-slim
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# Set working directory
+WORKDIR /app
+
+# Create non-root user for security (optional but recommended)
+# Note: If using mounted volumes, ensure the host directory has appropriate permissions
+# or run with --user flag matching your host UID:GID
+RUN groupadd --gid 1000 appgroup && \
+    useradd --uid 1000 --gid appgroup --shell /bin/bash --create-home appuser
+
+# Copy requirements first for better layer caching
+COPY requirements.txt /app/requirements.txt
+
+# Install dependencies
+RUN pip install --no-cache-dir -r /app/requirements.txt
+
+# Copy inference server code
+COPY inference_server/ /app/inference_server/
+
+# Create model registry directory
+RUN mkdir -p /app/model_registry && \
+    chown -R appuser:appgroup /app
+
+# Switch to non-root user
+USER appuser
+
+# Expose the inference server port
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
+
+# Default command to run the inference server
+CMD ["uvicorn", "inference_server.app:app", "--host", "0.0.0.0", "--port", "8000"]

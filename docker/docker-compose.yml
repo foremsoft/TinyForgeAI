@@ -1,0 +1,67 @@
+# TinyForgeAI Docker Compose Configuration
+#
+# Usage:
+#   cd docker
+#   docker-compose up --build
+#
+# For detached mode:
+#   docker-compose up --build -d
+#
+# View logs:
+#   docker-compose logs -f inference
+
+version: "3.8"
+
+services:
+  inference:
+    # Local image name
+    image: tinyforge-inference:local
+
+    # Build configuration
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.inference
+
+    # Container name for easy reference
+    container_name: tinyforge-inference
+
+    # Port mapping: host:container
+    ports:
+      - "8000:8000"
+
+    # Volume mappings
+    # Mount local model_registry directory for model artifacts
+    # The container expects model files at /app/model_registry/
+    # Example files: model_stub.json, model.onnx, quantized.onnx
+    volumes:
+      # Model registry - read/write for model updates
+      - ./model_registry:/app/model_registry:rw
+      # Optionally mount inference_server code for development (read-only)
+      # Uncomment below for live code reloading during development:
+      # - ../inference_server:/app/inference_server:ro
+
+    # Environment variables
+    environment:
+      # Server configuration
+      - INFERENCE_PORT=8000
+      - MODEL_REGISTRY_PATH=/app/model_registry
+      # Logging level
+      - LOG_LEVEL=INFO
+      # Disable Python buffering for real-time logs
+      - PYTHONUNBUFFERED=1
+
+    # Restart policy
+    restart: unless-stopped
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+# Optional: Define a network for multi-service setups
+networks:
+  default:
+    name: tinyforge-network

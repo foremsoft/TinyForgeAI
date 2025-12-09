@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(python -m pytest:*)",
+      "Bash(pip install:*)",
+      "Bash(where:*)",
+      "Bash(\"C:\\Users\\mayur\\AppData\\Local\\Programs\\Python\\Python311\\python.exe\" -m pytest tests/test_health.py -v)",
+      "Bash(\"C:\\Users\\mayur\\AppData\\Local\\Programs\\Python\\Python311\\python.exe\" -m pytest -q)",
+      "Bash(\"C:\\Users\\mayur\\AppData\\Local\\Programs\\Python\\Python311\\python.exe\" -m pip install pydantic-settings)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(\"C:\\Users\\mayur\\AppData\\Local\\Programs\\Python\\Python311\\python.exe\" -c \"\ntry:\n    from docx import Document\n    doc = Document()\n    doc.add_heading(''Sample DOCX Document'', 0)\n    doc.add_paragraph(''This is a sample Word document for TinyForgeAI testing.'')\n    doc.add_paragraph(''It demonstrates DOCX file ingestion capabilities.'')\n    doc.save(''examples/files/sample.docx'')\n    print(''Created sample.docx'')\nexcept ImportError:\n    print(''python-docx not installed, creating placeholder'')\n    with open(''examples/files/sample.docx.txt'', ''w'') as f:\n        f.write(''DOCX sample placeholder - install python-docx to create real file'')\n\")",
+      "Bash(\"C:\\Users\\mayur\\AppData\\Local\\Programs\\Python\\Python311\\python.exe\" -c \"\ntry:\n    import fitz  # PyMuPDF\n    doc = fitz.open()\n    page = doc.new_page()\n    text = ''Sample PDF Document\\n\\nThis is a sample PDF file for TinyForgeAI testing.\\nIt demonstrates PDF file ingestion capabilities.''\n    page.insert_text((72, 72), text, fontsize=12)\n    doc.save(''examples/files/sample.pdf'')\n    doc.close()\n    print(''Created sample.pdf with PyMuPDF'')\nexcept ImportError:\n    try:\n        from reportlab.lib.pagesizes import letter\n        from reportlab.pdfgen import canvas\n        c = canvas.Canvas(''examples/files/sample.pdf'', pagesize=letter)\n        c.drawString(72, 720, ''Sample PDF Document'')\n        c.drawString(72, 700, ''This is a sample PDF file for TinyForgeAI testing.'')\n        c.drawString(72, 680, ''It demonstrates PDF file ingestion capabilities.'')\n        c.save()\n        print(''Created sample.pdf with reportlab'')\n    except ImportError:\n        print(''No PDF library available, creating minimal PDF'')\n        # Create a minimal valid PDF manually\n        pdf_content = ''''''%PDF-1.4\n1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj\n3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R >> endobj\n4 0 obj << /Length 85 >> stream\nBT\n/F1 12 Tf\n72 720 Td\n(Sample PDF Document for TinyForgeAI testing.) Tj\nET\nendstream endobj\nxref\n0 5\n0000000000 65535 f \n0000000009 00000 n \n0000000058 00000 n \n0000000115 00000 n \n0000000210 00000 n \ntrailer << /Root 1 0 R /Size 5 >>\nstartxref\n345\n%%EOF''''''\n        with open(''examples/files/sample.pdf'', ''w'') as f:\n            f.write(pdf_content)\n        print(''Created minimal sample.pdf'')\n\")",
+      "Bash(\"C:\\Users\\mayur\\AppData\\Local\\Programs\\Python\\Python311\\python.exe\" -m pytest tests/test_file_ingest.py tests/test_file_helpers.py -v)",
+      "Bash(\"C:\\Users\\mayur\\AppData\\Local\\Programs\\Python\\Python311\\python.exe\" -m pytest tests/test_onnx_export.py -v)",
+      "Bash(\"C:\\Users\\mayur\\AppData\\Local\\Programs\\Python\\Python311\\python.exe\" -m pytest tests/test_cli.py -v)",
+      "Bash(\"C:\\Users\\mayur\\AppData\\Local\\Programs\\Python\\Python311\\python.exe\" -m pytest --co -q)",
+      "Bash(\"C:\\Users\\mayur\\AppData\\Local\\Programs\\Python\\Python311\\python.exe\" -m pytest -v --tb=short)",
+      "Bash(\"C:\\Users\\mayur\\AppData\\Local\\Programs\\Python\\Python311\\python.exe\" -m pytest tests/test_docker_files.py -v)",
+      "Bash(\"C:\\Users\\mayur\\AppData\\Local\\Programs\\Python\\Python311\\python.exe\" -m pytest tests/test_e2e_demo_script.py -v --tb=short)",
+      "Bash(\"C:\\Users\\mayur\\AppData\\Local\\Programs\\Python\\Python311\\python.exe\" -m pytest tests/test_e2e_demo_script.py::TestE2EDemoShellScript::test_script_runs_successfully -v --tb=short)"
+    ]
+  }
+}

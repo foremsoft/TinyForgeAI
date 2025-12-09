@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: tinyforge-inference-svc
+  labels:
+    app: tinyforge
+    component: inference
+spec:
+  selector:
+    app: tinyforge
+    component: inference
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 8000
+  type: ClusterIP
+---
+# Optional: NodePort service for external access without ingress
+apiVersion: v1
+kind: Service
+metadata:
+  name: tinyforge-inference-nodeport
+  labels:
+    app: tinyforge
+    component: inference
+spec:
+  selector:
+    app: tinyforge
+    component: inference
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 8000
+      nodePort: 30080
+  type: NodePort

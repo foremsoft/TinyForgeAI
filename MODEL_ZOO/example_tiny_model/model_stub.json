@@ -1,0 +1,11 @@
+{
+  "model_type": "tinyforge_stub",
+  "model_name": "example_tiny_model",
+  "version": "0.1.0",
+  "n_records": 0,
+  "created_time": "2025-01-15T00:00:00+00:00",
+  "notes": "Example stub model for TinyForgeAI Model Zoo",
+  "description": "Demo model that reverses input strings",
+  "license": "Apache-2.0",
+  "source": "MODEL_ZOO/example_tiny_model"
+}

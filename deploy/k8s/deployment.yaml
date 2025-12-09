@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tinyforge-inference
+  labels:
+    app: tinyforge
+    component: inference
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tinyforge
+      component: inference
+  template:
+    metadata:
+      labels:
+        app: tinyforge
+        component: inference
+    spec:
+      containers:
+        - name: inference
+          image: tinyforge-inference:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: MODEL_REGISTRY_PATH
+              value: /models
+            - name: INFERENCE_PORT
+              value: "8000"
+          ports:
+            - containerPort: 8000
+              name: http
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          volumeMounts:
+            - name: model-volume
+              mountPath: /models
+      volumes:
+        - name: model-volume
+          persistentVolumeClaim:
+            claimName: tinyforge-models-pvc
