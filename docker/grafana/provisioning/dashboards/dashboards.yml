@@ -1,0 +1,16 @@
+# Grafana Dashboard Provisioning
+# Automatically loads dashboards from the specified folder
+
+apiVersion: 1
+
+providers:
+  - name: 'TinyForgeAI Dashboards'
+    orgId: 1
+    folder: 'TinyForgeAI'
+    folderUid: 'tinyforge'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards/json

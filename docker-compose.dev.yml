@@ -1,0 +1,184 @@
+# TinyForgeAI Docker Compose - Development Environment
+#
+# Extends base docker-compose.yml with development services:
+# - PostgreSQL database
+# - Redis cache
+# - pgAdmin (database UI)
+# - Prometheus (metrics)
+# - Grafana (dashboards)
+#
+# Usage:
+#   docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+#   docker-compose -f docker-compose.yml -f docker-compose.dev.yml down -v
+#
+# Access:
+#   - API:       http://localhost:8000
+#   - Dashboard: http://localhost:3000
+#   - pgAdmin:   http://localhost:5050
+#   - Grafana:   http://localhost:3001
+#   - Prometheus: http://localhost:9090
+
+version: "3.8"
+
+services:
+  # ==========================================================================
+  # Override dashboard-api with dev settings
+  # ==========================================================================
+  dashboard-api:
+    environment:
+      - TINYFORGE_DEBUG=true
+      - TINYFORGE_DB_URL=postgresql://tinyforge:tinyforge@postgres:5432/tinyforge
+      - TINYFORGE_REDIS_URL=redis://redis:6379/0
+      - LOG_LEVEL=DEBUG
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # ==========================================================================
+  # Override inference with dev settings
+  # ==========================================================================
+  inference:
+    environment:
+      - TINYFORGE_DEBUG=true
+      - TINYFORGE_DB_URL=postgresql://tinyforge:tinyforge@postgres:5432/tinyforge
+      - TINYFORGE_REDIS_URL=redis://redis:6379/0
+      - LOG_LEVEL=DEBUG
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # ==========================================================================
+  # PostgreSQL Database
+  # ==========================================================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: tinyforge-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=tinyforge
+      - POSTGRES_PASSWORD=tinyforge
+      - POSTGRES_DB=tinyforge
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker/init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tinyforge"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - tinyforge-network
+
+  # ==========================================================================
+  # Redis Cache
+  # ==========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: tinyforge-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - tinyforge-network
+
+  # ==========================================================================
+  # pgAdmin - PostgreSQL Web UI
+  # ==========================================================================
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: tinyforge-pgadmin
+    ports:
+      - "5050:80"
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@tinyforge.local
+      - PGADMIN_DEFAULT_PASSWORD=admin
+      - PGADMIN_CONFIG_SERVER_MODE=False
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    networks:
+      - tinyforge-network
+    profiles:
+      - tools
+
+  # ==========================================================================
+  # Prometheus - Metrics Collection
+  # ==========================================================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: tinyforge-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - tinyforge-network
+    profiles:
+      - monitoring
+
+  # ==========================================================================
+  # Grafana - Metrics Visualization
+  # ==========================================================================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: tinyforge-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./docker/grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - tinyforge-network
+    profiles:
+      - monitoring
+
+# ==========================================================================
+# Development Volumes
+# ==========================================================================
+volumes:
+  postgres-data:
+    name: tinyforge-postgres-data
+  redis-data:
+    name: tinyforge-redis-data
+  pgadmin-data:
+    name: tinyforge-pgadmin-data
+  prometheus-data:
+    name: tinyforge-prometheus-data
+  grafana-data:
+    name: tinyforge-grafana-data

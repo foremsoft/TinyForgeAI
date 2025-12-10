@@ -59,6 +59,12 @@ TinyForgeAI gives you **your own small, focused language model** trained only on
 - Generates complete FastAPI service + Dockerfile + docker-compose
 - Dashboard API with Prometheus metrics for monitoring
 
+### Production-Ready Backend
+- **Rate Limiting**: Configurable rate limiting with sliding window (in-memory or Redis-based for distributed deployments)
+- **Webhooks**: Event-driven notifications for job status changes, model training, and system events
+- **Monitoring**: Prometheus metrics integration with custom counters, gauges, and histograms
+- **Exception Handling**: Comprehensive error hierarchy with structured error responses
+
 ### FOREMForge CLI
 
 ```bash
@@ -74,7 +80,7 @@ foremforge serve --dir ./service --dry-run
 | SQLite / Postgres | ✔ (SQLite stub) | Streaming reader, batch mode |
 | Google Docs | ✔ (mock mode) | No OAuth needed in test environments |
 | File Ingesters | ✔ | PDF/DOCX/TXT/MD |
-| APIs | Coming soon | Extend via Connector Interface |
+| REST APIs | ✔ | Pagination, auth, rate limiting |
 
 Each connector outputs:
 ```json
@@ -215,9 +221,13 @@ TinyForgeAI/
 │   │   ├── metrics.py    # BLEU, ROUGE, F1, etc.
 │   │   └── benchmark.py  # Benchmark comparison
 │   ├── model_exporter/   # ONNX export
+│   ├── exceptions.py     # Custom exception hierarchy
+│   ├── webhooks.py       # Webhook event system
+│   ├── monitoring.py     # Prometheus metrics
 │   └── api/              # FastAPI application
 ├── connectors/           # Data source connectors
 │   ├── db_connector.py   # SQLite/Postgres
+│   ├── api_connector.py  # REST API connector
 │   ├── google_docs.py    # Google Docs integration
 │   └── indexer.py        # RAG document indexer
 ├── model_zoo/            # Pre-configured model registry
@@ -226,6 +236,7 @@ TinyForgeAI/
 │   └── datasets/         # Sample training datasets
 ├── services/             # Microservices
 │   ├── dashboard_api/    # Dashboard REST API
+│   │   └── rate_limit.py # Rate limiting middleware
 │   └── training_worker/  # Async training job worker
 ├── dashboard/            # React web dashboard
 │   └── src/pages/        # Train, Models, Logs, Playground
@@ -393,6 +404,8 @@ Apache License 2.0 - see [LICENSE](LICENSE) for details.
 - [x] Multi-tenant inference service
 - [x] Cloud deployment templates (AWS, GCP, Azure)
 - [x] A/B testing for model comparisons
+- [x] Production-ready backend (rate limiting, webhooks, monitoring, exceptions)
+- [x] REST API connector with pagination and auth support
 - [ ] Model versioning and registry
 
 ---

@@ -14,9 +14,17 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
 
-from fastapi import FastAPI, HTTPException, BackgroundTasks, WebSocket, WebSocketDisconnect, Depends
+from fastapi import FastAPI, HTTPException, BackgroundTasks, WebSocket, WebSocketDisconnect, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+
+# Import rate limiting
+from services.dashboard_api.rate_limit import (
+    RateLimitMiddleware,
+    rate_limit,
+    get_rate_limiter,
+    RATE_LIMIT_ENABLED,
+)
 
 # Import authentication
 from services.dashboard_api.auth import (
@@ -60,8 +68,85 @@ USE_DATABASE = os.getenv("TINYFORGE_USE_DATABASE", "true").lower() == "true"
 
 app = FastAPI(
     title="TinyForgeAI Dashboard API",
-    description="Backend API for TinyForgeAI SaaS Dashboard",
+    description="""
+## TinyForgeAI Dashboard API
+
+Backend API for TinyForgeAI SaaS Dashboard providing comprehensive model lifecycle management.
+
+### Features
+
+- **Training Jobs**: Create, monitor, and manage model training jobs
+- **Model Registry**: Register, version, and track trained models
+- **Inference Services**: Deploy and manage model inference endpoints
+- **Real-time Updates**: WebSocket support for live progress monitoring
+- **Authentication**: Token-based authentication with rate limiting
+- **Metrics**: Prometheus-compatible metrics endpoint
+
+### Authentication
+
+Most endpoints require authentication. Set the `Authorization` header with your token:
+```
+Authorization: Bearer <your-token>
+```
+
+### Rate Limiting
+
+API endpoints are rate limited to ensure fair usage:
+- General API: 60 requests/minute
+- Authentication: 5 requests/minute
+- Inference: 60 requests/minute
+
+Rate limit headers are included in all responses:
+- `X-RateLimit-Limit`: Maximum requests allowed
+- `X-RateLimit-Remaining`: Requests remaining in window
+- `X-RateLimit-Reset`: Unix timestamp when limit resets
+
+### WebSocket Channels
+
+Connect to `/ws/{channel}` for real-time updates:
+- `jobs`: Training job progress updates
+- `logs`: Real-time log streaming
+- `stats`: Dashboard statistics updates
+""",
     version="0.2.0",
+    contact={
+        "name": "TinyForgeAI Support",
+        "url": "https://github.com/foremsoft/tinyforgeai",
+    },
+    license_info={
+        "name": "MIT",
+        "url": "https://opensource.org/licenses/MIT",
+    },
+    openapi_tags=[
+        {
+            "name": "Training",
+            "description": "Training job management - create, monitor, and control model training",
+        },
+        {
+            "name": "Models",
+            "description": "Model registry - register, version, and manage trained models",
+        },
+        {
+            "name": "Services",
+            "description": "Inference services - deploy and manage model serving endpoints",
+        },
+        {
+            "name": "Inference",
+            "description": "Run model predictions on deployed services",
+        },
+        {
+            "name": "Dashboard",
+            "description": "Dashboard statistics and system logs",
+        },
+        {
+            "name": "Authentication",
+            "description": "User authentication and token management",
+        },
+        {
+            "name": "Health",
+            "description": "System health and status checks",
+        },
+    ],
 )
 
 # CORS for React frontend
@@ -72,6 +157,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Rate limiting middleware
+if RATE_LIMIT_ENABLED:
+    app.add_middleware(RateLimitMiddleware)
 
 # Prometheus metrics middleware (middleware only if available)
 if METRICS_AVAILABLE and METRICS_ENABLED:
@@ -946,13 +1035,14 @@ async def mark_model_undeployed(model_id: str):
 # ============================================
 
 @app.post("/api/predict", response_model=PredictResponse, tags=["Inference"])
-async def predict(request: PredictRequest):
+@rate_limit(requests=60, window=60, category="inference")  # 60 predictions per minute
+async def predict(request: Request, predict_request: PredictRequest):
     """Run inference on a deployed service."""
     import time
     start_time = time.time()
 
     # Stub implementation - in production, route to actual service
-    output = request.input[::-1]  # Reverse string as stub
+    output = predict_request.input[::-1]  # Reverse string as stub
     confidence = 0.85
 
     latency_ms = (time.time() - start_time) * 1000
@@ -1066,23 +1156,24 @@ async def auth_status():
 
 
 @app.post("/api/auth/login", response_model=LoginResponse, tags=["Authentication"])
-async def login(request: LoginRequest):
+@rate_limit(requests=5, window=60, category="auth")  # Strict limit on login attempts
+async def login(request: Request, login_data: LoginRequest):
     """
     Login with username and password.
     Returns a session token for subsequent requests.
     """
-    if not verify_basic_credentials(request.username, request.password):
+    if not verify_basic_credentials(login_data.username, login_data.password):
         raise HTTPException(
             status_code=401,
             detail="Invalid username or password",
         )
 
-    token = token_auth.create_token(request.username)
-    add_log("INFO", "auth", f"User logged in: {request.username}")
+    token = token_auth.create_token(login_data.username)
+    add_log("INFO", "auth", f"User logged in: {login_data.username}")
 
     return LoginResponse(
         token=token,
-        username=request.username,
+        username=login_data.username,
     )
 
 
@@ -1127,6 +1218,7 @@ async def health_check():
         "auth_enabled": AUTH_ENABLED,
         "database_enabled": USE_DATABASE,
         "metrics_enabled": METRICS_AVAILABLE and METRICS_ENABLED,
+        "rate_limit_enabled": RATE_LIMIT_ENABLED,
         "jobs_count": jobs_count,
         "services_count": services_count,
         "models_count": models_count,
@@ -1140,9 +1232,29 @@ async def root():
         "name": "TinyForgeAI Dashboard API",
         "version": "0.2.0",
         "docs": "/docs",
+        "openapi": "/api/openapi.json",
         "websocket": "/ws/{channel}",
         "auth_enabled": AUTH_ENABLED,
     }
+
+
+@app.get("/api/openapi.json", tags=["Health"], include_in_schema=False)
+async def get_openapi_spec():
+    """
+    Export OpenAPI specification.
+
+    Returns the complete OpenAPI 3.0 specification for this API.
+    Useful for generating client SDKs or importing into API tools.
+    """
+    from fastapi.openapi.utils import get_openapi
+
+    return get_openapi(
+        title=app.title,
+        version=app.version,
+        description=app.description,
+        routes=app.routes,
+        tags=app.openapi_tags,
+    )
 
 
 # ============================================

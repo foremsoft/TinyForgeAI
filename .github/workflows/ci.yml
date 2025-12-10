@@ -37,6 +37,20 @@ jobs:
           python -c "from backend.training.real_trainer import RealTrainer, TrainingConfig; print('real_trainer OK')"
           python -c "from connectors.indexer import DocumentIndexer, IndexerConfig; print('indexer OK')"
           python -c "from services.dashboard_api.main import app; print('dashboard_api OK')"
+          python -c "from backend.exceptions import TinyForgeError, TrainingError; print('exceptions OK')"
+          python -c "from backend.webhooks import WebhookManager, WebhookEventType; print('webhooks OK')"
+          python -c "from backend.monitoring import MetricsRegistry, get_metrics_registry; print('monitoring OK')"
+          python -c "from connectors import DBConnector, APIConnector; print('connectors OK')"
+          python -c "from services.dashboard_api.rate_limit import RateLimiter, rate_limit; print('rate_limit OK')"
+
+      - name: Generate OpenAPI spec
+        run: python scripts/generate_openapi.py
+
+      - name: Upload OpenAPI spec
+        uses: actions/upload-artifact@v4
+        with:
+          name: openapi-spec
+          path: docs/api/openapi.json
 
   lint:
     name: Lint Code
