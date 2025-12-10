@@ -1,0 +1,116 @@
+# Customer Support Bot Training Configuration
+# ============================================
+# This configuration file defines the training parameters for
+# the customer support FAQ model.
+
+# Model Configuration
+model:
+  # Base model to fine-tune
+  # Options: google/flan-t5-small, google/flan-t5-base, microsoft/phi-2
+  name: google/flan-t5-small
+
+  # Task type for the model
+  task_type: qa
+
+# LoRA Configuration (Parameter Efficient Fine-Tuning)
+lora:
+  # Enable LoRA for efficient fine-tuning
+  enabled: true
+
+  # LoRA rank - higher means more capacity but slower training
+  # Recommended: 4-16 for small models, 8-32 for larger models
+  r: 8
+
+  # LoRA alpha - scaling parameter
+  # Rule of thumb: alpha = 2 * r
+  alpha: 32
+
+  # Dropout for regularization
+  dropout: 0.1
+
+  # Target modules for LoRA (model-specific)
+  # For T5: ["q", "v"]
+  # For GPT-2: ["c_attn"]
+  target_modules: null  # Auto-detect based on model
+
+# Training Configuration
+training:
+  # Number of training epochs
+  epochs: 3
+
+  # Batch size (reduce if out of memory)
+  batch_size: 8
+
+  # Learning rate
+  learning_rate: 0.0003
+
+  # Maximum sequence length
+  max_length: 512
+
+  # Warmup steps
+  warmup_steps: 100
+
+  # Weight decay for regularization
+  weight_decay: 0.01
+
+  # Gradient checkpointing for memory efficiency
+  gradient_checkpointing: false
+
+  # Logging frequency
+  logging_steps: 10
+
+  # Checkpoint save frequency
+  save_steps: 500
+
+  # Evaluation strategy
+  evaluation_strategy: steps
+
+  # Evaluation frequency
+  eval_steps: 100
+
+# Data Configuration
+data:
+  # Path to training data (JSONL format)
+  path: data/support_faq_dataset/faq_data.jsonl
+
+  # Validation split (fraction of data for validation)
+  val_split: 0.1
+
+  # Maximum number of samples (null for all)
+  max_samples: null
+
+# Output Configuration
+output:
+  # Directory to save the trained model
+  dir: ./output/support_bot
+
+  # Save best model only
+  save_best_only: true
+
+  # Load best model at end
+  load_best_model_at_end: true
+
+# Hardware Configuration
+hardware:
+  # Use GPU if available
+  use_gpu: true
+
+  # Mixed precision training (fp16)
+  fp16: false
+
+  # Number of workers for data loading
+  dataloader_workers: 2
+
+# Logging Configuration
+logging:
+  # Logging level
+  level: INFO
+
+  # Log to file
+  log_file: null
+
+  # Enable Weights & Biases logging
+  wandb: false
+
+  # WandB project name
+  wandb_project: customer-support-bot

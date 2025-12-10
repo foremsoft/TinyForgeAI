@@ -1,0 +1,25 @@
+# Customer Support Bot Dependencies
+# ==================================
+# Install with: pip install -r requirements.txt
+
+# Core TinyForgeAI (install from project root)
+# pip install -e ".[training]"
+
+# Required dependencies
+pyyaml>=6.0
+requests>=2.28.0
+uvicorn>=0.20.0
+fastapi>=0.100.0
+
+# Training dependencies (already included in tinyforgeai[training])
+# torch>=2.0.0
+# transformers>=4.30.0
+# peft>=0.4.0
+# datasets>=2.14.0
+
+# Optional: For Confluence integration
+# atlassian-python-api>=3.41.0
+
+# Optional: For advanced features
+# python-multipart>=0.0.6  # For file uploads
+# prometheus-client>=0.17.0  # For metrics
