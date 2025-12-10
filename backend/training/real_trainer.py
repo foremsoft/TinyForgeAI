@@ -35,6 +35,17 @@ from typing import Any, Dict, List, Optional, Union, TYPE_CHECKING
 if TYPE_CHECKING:
     from datasets import Dataset
 
+from backend.exceptions import (
+    TrainingError,
+    ModelNotFoundError,
+    ModelLoadError,
+    TrainingConfigError,
+    CheckpointError,
+    GPUError,
+    DatasetError,
+    EmptyDatasetError,
+)
+
 logger = logging.getLogger(__name__)
 
 # Flag to check if real training dependencies are available
@@ -137,11 +148,15 @@ class RealTrainer:
 
         Args:
             config: Training configuration. Uses defaults if not provided.
+
+        Raises:
+            TrainingError: If training dependencies are not available.
         """
         if not TRAINING_AVAILABLE:
-            raise RuntimeError(
+            raise TrainingError(
                 "Training dependencies not available. "
-                "Install with: pip install transformers datasets torch"
+                "Install with: pip install transformers datasets torch",
+                code="DEPENDENCIES_MISSING",
             )
 
         self.config = config or TrainingConfig()
@@ -150,37 +165,64 @@ class RealTrainer:
         self.trainer = None
 
     def load_model(self) -> None:
-        """Load the model and tokenizer."""
+        """
+        Load the model and tokenizer.
+
+        Raises:
+            ModelNotFoundError: If the model cannot be found.
+            ModelLoadError: If the model fails to load.
+        """
         logger.info(f"Loading model: {self.config.model_name}")
 
-        self.tokenizer = AutoTokenizer.from_pretrained(
-            self.config.model_name,
-            trust_remote_code=True
-        )
+        try:
+            self.tokenizer = AutoTokenizer.from_pretrained(
+                self.config.model_name,
+                trust_remote_code=True
+            )
+        except OSError as e:
+            if "does not appear to have" in str(e) or "not found" in str(e).lower():
+                raise ModelNotFoundError(self.config.model_name)
+            raise ModelLoadError(self.config.model_name, str(e))
+        except Exception as e:
+            raise ModelLoadError(self.config.model_name, str(e))
 
         # Ensure pad token exists
         if self.tokenizer.pad_token is None:
             self.tokenizer.pad_token = self.tokenizer.eos_token
 
         # Load model based on type
-        if self.config.model_type == "seq2seq":
-            self.model = AutoModelForSeq2SeqLM.from_pretrained(
-                self.config.model_name,
-                trust_remote_code=True
-            )
-        else:
-            self.model = AutoModelForCausalLM.from_pretrained(
-                self.config.model_name,
-                trust_remote_code=True
-            )
+        try:
+            if self.config.model_type == "seq2seq":
+                self.model = AutoModelForSeq2SeqLM.from_pretrained(
+                    self.config.model_name,
+                    trust_remote_code=True
+                )
+            else:
+                self.model = AutoModelForCausalLM.from_pretrained(
+                    self.config.model_name,
+                    trust_remote_code=True
+                )
+        except OSError as e:
+            if "does not appear to have" in str(e) or "not found" in str(e).lower():
+                raise ModelNotFoundError(self.config.model_name)
+            raise ModelLoadError(self.config.model_name, str(e))
+        except Exception as e:
+            raise ModelLoadError(self.config.model_name, str(e))
 
         logger.info(f"Model loaded: {self.model.__class__.__name__}")
 
     def apply_peft(self) -> None:
-        """Apply PEFT/LoRA to the model."""
+        """
+        Apply PEFT/LoRA to the model.
+
+        Raises:
+            TrainingError: If PEFT is not available.
+            TrainingConfigError: If LoRA configuration is invalid.
+        """
         if not PEFT_AVAILABLE:
-            raise RuntimeError(
-                "PEFT not available. Install with: pip install peft"
+            raise TrainingError(
+                "PEFT not available. Install with: pip install peft",
+                code="PEFT_NOT_AVAILABLE",
             )
 
         if not self.config.use_peft:
@@ -216,16 +258,45 @@ class RealTrainer:
 
         Returns:
             HuggingFace Dataset ready for training.
+
+        Raises:
+            DatasetError: If the dataset file cannot be read or parsed.
+            EmptyDatasetError: If the dataset contains no valid samples.
         """
         logger.info(f"Loading dataset from: {data_path}")
+        data_path = Path(data_path)
+
+        if not data_path.exists():
+            raise DatasetError(
+                f"Dataset file not found: {data_path}",
+                dataset_path=str(data_path),
+            )
 
         records = []
-        with open(data_path, "r", encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if line:
-                    record = json.loads(line)
-                    records.append(record)
+        try:
+            with open(data_path, "r", encoding="utf-8") as f:
+                for line_num, line in enumerate(f, 1):
+                    line = line.strip()
+                    if line:
+                        try:
+                            record = json.loads(line)
+                            if "input" not in record or "output" not in record:
+                                logger.warning(
+                                    f"Line {line_num}: Missing 'input' or 'output' field, skipping"
+                                )
+                                continue
+                            records.append(record)
+                        except json.JSONDecodeError as e:
+                            logger.warning(f"Line {line_num}: Invalid JSON, skipping: {e}")
+                            continue
+        except IOError as e:
+            raise DatasetError(
+                f"Failed to read dataset file: {e}",
+                dataset_path=str(data_path),
+            )
+
+        if not records:
+            raise EmptyDatasetError(dataset_path=str(data_path))
 
         if self.config.max_samples:
             records = records[:self.config.max_samples]
@@ -410,9 +481,15 @@ class RealTrainer:
 
         Returns:
             Generated text.
+
+        Raises:
+            TrainingError: If model is not loaded.
         """
         if self.model is None or self.tokenizer is None:
-            raise RuntimeError("Model not loaded. Call load_model() first.")
+            raise TrainingError(
+                "Model not loaded. Call load_model() first.",
+                code="MODEL_NOT_LOADED",
+            )
 
         inputs = self.tokenizer(
             text,

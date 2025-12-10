@@ -6,7 +6,10 @@ containing input/output pairs for model training.
 """
 
 import json
+import logging
 from typing import Dict, Generator, Iterable, List
+
+logger = logging.getLogger(__name__)
 
 
 def load_jsonl(path: str) -> List[Dict]:
@@ -25,6 +28,7 @@ def load_jsonl(path: str) -> List[Dict]:
         ValueError: If a record is missing required 'input' or 'output' keys.
         FileNotFoundError: If the file does not exist.
     """
+    logger.debug(f"Loading JSONL file: {path}")
     records = []
     with open(path, "r", encoding="utf-8") as f:
         for line_num, line in enumerate(f, start=1):
@@ -34,13 +38,16 @@ def load_jsonl(path: str) -> List[Dict]:
             try:
                 record = json.loads(line)
             except json.JSONDecodeError as e:
+                logger.error(f"Invalid JSON at line {line_num}: {e}")
                 raise ValueError(f"Invalid JSON at line {line_num}: {e}")
 
             if "input" not in record or "output" not in record:
+                logger.error(f"Invalid record at line {line_num}: missing keys")
                 raise ValueError(
                     f"Invalid record at line {line_num}: missing keys 'input' or 'output'"
                 )
             records.append(record)
+    logger.info(f"Loaded {len(records)} records from {path}")
     return records
 
 

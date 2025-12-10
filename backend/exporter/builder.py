@@ -7,12 +7,15 @@ templates ready for deployment with uvicorn or Docker.
 
 import argparse
 import json
+import logging
 import os
 import shutil
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 
 def get_template_dir() -> Path:
@@ -75,6 +78,7 @@ def build(
     with open(metadata_path, "w") as f:
         json.dump(metadata, f, indent=2)
 
+    logger.info(f"Successfully built inference service at: {output_path}")
     print(f"Successfully built inference service at: {output_path}")
 
     # Handle ONNX export if requested

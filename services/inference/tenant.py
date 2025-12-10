@@ -19,6 +19,17 @@ from threading import Lock
 
 logger = logging.getLogger(__name__)
 
+# Check for bcrypt availability
+BCRYPT_AVAILABLE = False
+try:
+    import bcrypt
+    BCRYPT_AVAILABLE = True
+except ImportError:
+    logger.warning(
+        "bcrypt not available, falling back to SHA256 for API key hashing. "
+        "For production, install bcrypt: pip install bcrypt"
+    )
+
 
 class TenantStatus(str, Enum):
     """Tenant status values."""
@@ -326,8 +337,46 @@ class TenantManager:
 
     @staticmethod
     def hash_api_key(api_key: str) -> str:
-        """Hash an API key for storage."""
-        return hashlib.sha256(api_key.encode()).hexdigest()
+        """
+        Hash an API key for secure storage.
+
+        Uses bcrypt when available for cryptographically secure hashing,
+        falls back to SHA256 if bcrypt is not installed.
+
+        Args:
+            api_key: The API key to hash.
+
+        Returns:
+            Hashed API key string.
+        """
+        if BCRYPT_AVAILABLE:
+            # Use bcrypt with a cost factor of 12
+            return bcrypt.hashpw(api_key.encode(), bcrypt.gensalt(rounds=12)).decode()
+        else:
+            # Fallback to SHA256 (less secure but functional)
+            return hashlib.sha256(api_key.encode()).hexdigest()
+
+    @staticmethod
+    def verify_api_key(api_key: str, hashed: str) -> bool:
+        """
+        Verify an API key against its hash.
+
+        Args:
+            api_key: The API key to verify.
+            hashed: The stored hash to verify against.
+
+        Returns:
+            True if the API key matches the hash.
+        """
+        if BCRYPT_AVAILABLE and hashed.startswith("$2"):
+            # bcrypt hash format
+            try:
+                return bcrypt.checkpw(api_key.encode(), hashed.encode())
+            except Exception:
+                return False
+        else:
+            # SHA256 fallback
+            return hashlib.sha256(api_key.encode()).hexdigest() == hashed
 
     def create_tenant(
         self,
@@ -373,12 +422,24 @@ class TenantManager:
         return self._tenants.get(tenant_id)
 
     def get_tenant_by_api_key(self, api_key: str) -> Optional[Tenant]:
-        """Get tenant by API key."""
-        api_key_hash = self.hash_api_key(api_key)
-        tenant_id = self._api_key_index.get(api_key_hash)
-        if tenant_id:
-            return self._tenants.get(tenant_id)
-        return None
+        """
+        Get tenant by API key.
+
+        Supports both bcrypt and SHA256 hashed keys for backward compatibility.
+        """
+        # For bcrypt, we need to check each tenant since we can't index by hash
+        if BCRYPT_AVAILABLE:
+            for tenant in self._tenants.values():
+                if self.verify_api_key(api_key, tenant.api_key_hash):
+                    return tenant
+            return None
+        else:
+            # SHA256 can use the index
+            api_key_hash = self.hash_api_key(api_key)
+            tenant_id = self._api_key_index.get(api_key_hash)
+            if tenant_id:
+                return self._tenants.get(tenant_id)
+            return None
 
     def list_tenants(
         self,
