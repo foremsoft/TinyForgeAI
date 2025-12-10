@@ -1,0 +1,74 @@
+# Internal Knowledge Search Configuration
+# ========================================
+
+# Embedding model for semantic search
+embedding:
+  model: sentence-transformers/all-MiniLM-L6-v2
+  device: cpu  # Use 'cuda' for GPU acceleration
+  batch_size: 32
+
+# Document chunking strategy
+chunking:
+  size: 500         # Characters per chunk
+  overlap: 50       # Overlap between chunks
+  separator: "\n\n" # Preferred split point
+
+# Vector index settings
+index:
+  path: ./data/knowledge_index
+  type: faiss       # Options: faiss, simple
+  metric: cosine    # Options: cosine, l2, inner_product
+
+# Search parameters
+search:
+  top_k: 5          # Number of results to return
+  min_score: 0.3    # Minimum similarity score (0-1)
+  rerank: false     # Enable reranking (requires more compute)
+
+# Answer generation (optional)
+generation:
+  enabled: true
+  model: gpt2       # Or path to fine-tuned model
+  max_length: 256
+  temperature: 0.7
+
+# Data sources configuration
+sources:
+  local:
+    enabled: true
+    path: ./data/sample_documents
+    extensions:
+      - .txt
+      - .md
+      - .pdf
+      - .docx
+
+  gdrive:
+    enabled: false
+    credentials_path: ./credentials/google_service_account.json
+    folder_ids: []
+
+  notion:
+    enabled: false
+    # token: ${NOTION_TOKEN}  # Set via environment variable
+    database_ids: []
+
+  confluence:
+    enabled: false
+    # url: https://your-company.atlassian.net
+    # username: ${CONFLUENCE_USER}
+    # api_token: ${CONFLUENCE_TOKEN}
+    space_keys: []
+
+# API server settings
+server:
+  host: 0.0.0.0
+  port: 8001
+  cors_origins:
+    - "*"
+  rate_limit: 100  # Requests per minute
+
+# Logging
+logging:
+  level: INFO
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"

@@ -1,0 +1,263 @@
+API REFERENCE
+=============
+
+Base URL: https://api.example.com/v1
+
+Authentication
+--------------
+
+All API requests require authentication using an API key or OAuth2 token.
+
+API Key Authentication:
+Include the API key in the header:
+    Authorization: Bearer YOUR_API_KEY
+
+OAuth2 Authentication:
+1. Obtain access token from /oauth/token endpoint
+2. Include token in header:
+    Authorization: Bearer ACCESS_TOKEN
+
+Rate Limiting:
+- Standard tier: 100 requests per minute
+- Professional tier: 1000 requests per minute
+- Enterprise tier: Custom limits
+
+Endpoints
+---------
+
+GET /health
+~~~~~~~~~~~
+Check service health status.
+
+Request:
+    GET /health
+
+Response:
+    {
+        "status": "healthy",
+        "version": "1.0.0",
+        "uptime": 86400
+    }
+
+Status Codes:
+- 200: Service is healthy
+- 503: Service is unhealthy
+
+POST /users
+~~~~~~~~~~~
+Create a new user account.
+
+Request:
+    POST /users
+    Content-Type: application/json
+
+    {
+        "email": "user@example.com",
+        "name": "John Doe",
+        "role": "member"
+    }
+
+Response:
+    {
+        "id": "usr_123abc",
+        "email": "user@example.com",
+        "name": "John Doe",
+        "role": "member",
+        "created_at": "2024-01-15T10:30:00Z"
+    }
+
+Status Codes:
+- 201: User created successfully
+- 400: Invalid request body
+- 409: Email already exists
+
+GET /users/{id}
+~~~~~~~~~~~~~~~
+Retrieve user information.
+
+Request:
+    GET /users/usr_123abc
+
+Response:
+    {
+        "id": "usr_123abc",
+        "email": "user@example.com",
+        "name": "John Doe",
+        "role": "member",
+        "created_at": "2024-01-15T10:30:00Z",
+        "last_login": "2024-01-20T14:22:00Z"
+    }
+
+Status Codes:
+- 200: Success
+- 404: User not found
+
+PUT /users/{id}
+~~~~~~~~~~~~~~~
+Update user information.
+
+Request:
+    PUT /users/usr_123abc
+    Content-Type: application/json
+
+    {
+        "name": "John Smith",
+        "role": "admin"
+    }
+
+Response:
+    {
+        "id": "usr_123abc",
+        "email": "user@example.com",
+        "name": "John Smith",
+        "role": "admin",
+        "updated_at": "2024-01-21T09:15:00Z"
+    }
+
+Status Codes:
+- 200: User updated successfully
+- 400: Invalid request body
+- 404: User not found
+
+DELETE /users/{id}
+~~~~~~~~~~~~~~~~~~
+Delete a user account.
+
+Request:
+    DELETE /users/usr_123abc
+
+Response:
+    {
+        "deleted": true,
+        "id": "usr_123abc"
+    }
+
+Status Codes:
+- 200: User deleted successfully
+- 404: User not found
+
+GET /projects
+~~~~~~~~~~~~~
+List all projects.
+
+Request:
+    GET /projects?page=1&limit=20&status=active
+
+Query Parameters:
+- page: Page number (default: 1)
+- limit: Items per page (default: 20, max: 100)
+- status: Filter by status (active, archived, all)
+
+Response:
+    {
+        "data": [
+            {
+                "id": "prj_456def",
+                "name": "My Project",
+                "status": "active",
+                "created_at": "2024-01-10T08:00:00Z"
+            }
+        ],
+        "pagination": {
+            "page": 1,
+            "limit": 20,
+            "total": 45,
+            "pages": 3
+        }
+    }
+
+POST /projects
+~~~~~~~~~~~~~~
+Create a new project.
+
+Request:
+    POST /projects
+    Content-Type: application/json
+
+    {
+        "name": "New Project",
+        "description": "Project description",
+        "settings": {
+            "visibility": "private",
+            "notifications": true
+        }
+    }
+
+Response:
+    {
+        "id": "prj_789ghi",
+        "name": "New Project",
+        "description": "Project description",
+        "status": "active",
+        "settings": {
+            "visibility": "private",
+            "notifications": true
+        },
+        "created_at": "2024-01-21T10:00:00Z"
+    }
+
+Error Responses
+---------------
+
+All error responses follow this format:
+
+    {
+        "error": {
+            "code": "ERROR_CODE",
+            "message": "Human-readable error message",
+            "details": {}
+        }
+    }
+
+Common Error Codes:
+- INVALID_REQUEST: Request body is malformed
+- UNAUTHORIZED: Missing or invalid authentication
+- FORBIDDEN: Insufficient permissions
+- NOT_FOUND: Resource not found
+- RATE_LIMITED: Too many requests
+- INTERNAL_ERROR: Server error
+
+Webhooks
+--------
+
+Configure webhooks to receive real-time notifications.
+
+Webhook Events:
+- user.created: New user registered
+- user.updated: User information changed
+- project.created: New project created
+- project.deleted: Project deleted
+
+Webhook Payload:
+    {
+        "event": "user.created",
+        "timestamp": "2024-01-21T10:30:00Z",
+        "data": {
+            "id": "usr_123abc",
+            "email": "user@example.com"
+        }
+    }
+
+Webhook Security:
+All webhooks include a signature header for verification:
+    X-Webhook-Signature: sha256=abc123...
+
+Verify using HMAC-SHA256 with your webhook secret.
+
+SDKs and Libraries
+------------------
+
+Official SDKs:
+- Python: pip install example-sdk
+- JavaScript: npm install @example/sdk
+- Go: go get github.com/example/sdk-go
+
+SDK Example (Python):
+    from example_sdk import Client
+
+    client = Client(api_key="YOUR_API_KEY")
+    user = client.users.create(
+        email="user@example.com",
+        name="John Doe"
+    )
+    print(user.id)

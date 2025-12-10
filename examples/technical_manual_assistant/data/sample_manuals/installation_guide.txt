@@ -1,0 +1,122 @@
+INSTALLATION GUIDE
+==================
+
+System Requirements
+-------------------
+
+Before installing the software, ensure your system meets the following requirements:
+
+Hardware Requirements:
+- CPU: 64-bit processor, 2 GHz or faster
+- RAM: 8 GB minimum, 16 GB recommended
+- Storage: 20 GB available disk space
+- Network: Ethernet or WiFi connection
+
+Software Requirements:
+- Operating System: Windows 10/11, macOS 12+, or Ubuntu 20.04+
+- Python: Version 3.8 or higher
+- Docker: Version 20.0 or higher (optional, for containerized deployment)
+
+Installation Steps
+------------------
+
+Step 1: Download the Software
+
+Download the latest release from our website or use the command line:
+
+    curl -O https://releases.example.com/latest/installer.tar.gz
+    tar -xzf installer.tar.gz
+
+Alternatively, use pip to install directly:
+
+    pip install example-software
+
+Step 2: Configure Environment Variables
+
+Set the required environment variables:
+
+On Linux/macOS:
+    export EXAMPLE_HOME=/opt/example
+    export EXAMPLE_CONFIG=/etc/example/config.yaml
+
+On Windows:
+    set EXAMPLE_HOME=C:\Program Files\Example
+    set EXAMPLE_CONFIG=C:\ProgramData\Example\config.yaml
+
+Step 3: Initialize the Database
+
+Run the initialization script:
+
+    example-cli init --database postgresql://localhost:5432/example
+
+This creates the necessary tables and default configurations.
+
+Step 4: Start the Service
+
+Start the main service:
+
+    example-cli start --config /etc/example/config.yaml
+
+Verify the service is running:
+
+    example-cli status
+
+You should see "Service running on port 8080".
+
+Docker Installation
+-------------------
+
+For containerized deployment:
+
+Step 1: Pull the Docker Image
+
+    docker pull example/software:latest
+
+Step 2: Run the Container
+
+    docker run -d \
+        --name example-service \
+        -p 8080:8080 \
+        -v /path/to/config:/etc/example \
+        example/software:latest
+
+Step 3: Verify Installation
+
+    docker logs example-service
+    curl http://localhost:8080/health
+
+Upgrading from Previous Versions
+--------------------------------
+
+To upgrade from a previous version:
+
+1. Backup your data:
+    example-cli backup --output /backup/data.tar.gz
+
+2. Stop the service:
+    example-cli stop
+
+3. Install the new version:
+    pip install --upgrade example-software
+
+4. Run database migrations:
+    example-cli migrate
+
+5. Restart the service:
+    example-cli start
+
+Post-Installation Verification
+------------------------------
+
+Verify your installation by running the health check:
+
+    curl http://localhost:8080/health
+
+Expected response:
+    {"status": "healthy", "version": "1.0.0"}
+
+Run the self-test suite:
+
+    example-cli test --all
+
+All tests should pass. If any tests fail, consult the Troubleshooting Guide.

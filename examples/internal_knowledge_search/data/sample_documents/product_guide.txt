@@ -1,0 +1,125 @@
+PRODUCT USER GUIDE
+==================
+
+Welcome to our Enterprise Data Platform! This guide covers the essential features
+and how to get the most out of our product.
+
+GETTING STARTED
+---------------
+
+1. Account Setup
+   - Navigate to https://app.example.com/signup
+   - Enter your work email address
+   - Choose a strong password (minimum 12 characters)
+   - Complete the email verification process
+   - Set up two-factor authentication (required)
+
+2. Workspace Creation
+   - Click "Create Workspace" from the dashboard
+   - Name your workspace (e.g., "Marketing Analytics")
+   - Invite team members via email
+   - Configure workspace permissions
+
+CORE FEATURES
+-------------
+
+Data Connections
+~~~~~~~~~~~~~~~~
+Connect to your data sources in minutes:
+
+Supported databases:
+- PostgreSQL, MySQL, MariaDB
+- Microsoft SQL Server
+- Oracle Database
+- MongoDB, Redis
+- Snowflake, BigQuery, Redshift
+
+File imports:
+- CSV, Excel, JSON
+- Parquet, Avro
+- XML, YAML
+
+API integrations:
+- REST API endpoints
+- GraphQL queries
+- Webhook receivers
+
+Dashboard Builder
+~~~~~~~~~~~~~~~~~
+Create interactive dashboards with our drag-and-drop builder:
+
+Available visualizations:
+- Line, bar, and area charts
+- Pie and donut charts
+- Tables and pivot tables
+- Maps and geographic visualizations
+- KPI cards and gauges
+- Custom HTML widgets
+
+Dashboard features:
+- Real-time data refresh
+- Cross-filtering between charts
+- Drill-down capabilities
+- Scheduled email reports
+- Public and embedded sharing
+
+Query Editor
+~~~~~~~~~~~~
+Write and execute SQL queries directly:
+
+Features:
+- Syntax highlighting and autocomplete
+- Query history and versioning
+- Parameterized queries
+- Export results to CSV/Excel
+- Schedule recurring queries
+
+KEYBOARD SHORTCUTS
+------------------
+
+Dashboard:
+- Ctrl+N: New chart
+- Ctrl+S: Save dashboard
+- Ctrl+R: Refresh data
+- F11: Fullscreen mode
+
+Query Editor:
+- Ctrl+Enter: Execute query
+- Ctrl+Shift+F: Format SQL
+- Ctrl+/: Comment lines
+- Ctrl+Space: Autocomplete
+
+TROUBLESHOOTING
+---------------
+
+Common issues and solutions:
+
+Q: My data connection keeps failing
+A: Check that your database allows connections from our IP ranges.
+   Ensure your credentials are correct and not expired.
+   Verify network/firewall settings allow outbound connections on port 443.
+
+Q: Dashboard is loading slowly
+A: Consider adding filters to reduce data volume.
+   Use aggregations at the database level when possible.
+   Enable caching for frequently-accessed dashboards.
+
+Q: Query results are different from expected
+A: Check your date/time zone settings in workspace preferences.
+   Verify join conditions and filter clauses.
+   Use the query explain feature to understand execution plan.
+
+SUPPORT
+-------
+
+Need help? Contact us through:
+- In-app chat support (Business hours: 9 AM - 6 PM EST)
+- Email: support@example.com
+- Knowledge base: https://help.example.com
+- Community forum: https://community.example.com
+
+Enterprise customers have access to:
+- Dedicated support engineer
+- Priority response SLA (< 4 hours)
+- Quarterly business reviews
+- Custom training sessions

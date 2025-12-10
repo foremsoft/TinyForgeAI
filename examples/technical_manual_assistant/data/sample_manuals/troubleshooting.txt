@@ -1,0 +1,159 @@
+TROUBLESHOOTING GUIDE
+=====================
+
+This guide covers common issues and their solutions.
+
+Connection Issues
+-----------------
+
+Problem: Cannot connect to the service
+Solution:
+1. Verify the service is running: `example-cli status`
+2. Check the port is not blocked by firewall
+3. Ensure the correct hostname/IP is being used
+4. Test connectivity: `telnet localhost 8080`
+
+Problem: Connection timeout errors
+Solution:
+1. Check network latency: `ping server-hostname`
+2. Increase timeout in config: `connection_timeout: 30`
+3. Verify no network congestion
+4. Check server resource utilization
+
+Problem: SSL/TLS certificate errors
+Solution:
+1. Verify certificate is valid: `openssl s_client -connect server:443`
+2. Update CA certificates: `update-ca-certificates`
+3. Check certificate expiration date
+4. Ensure hostname matches certificate CN
+
+Authentication Issues
+---------------------
+
+Problem: Invalid credentials error
+Solution:
+1. Verify username and password are correct
+2. Check for leading/trailing whitespace
+3. Ensure account is not locked
+4. Reset password if necessary: `example-cli reset-password`
+
+Problem: Token expired error
+Solution:
+1. Refresh the authentication token
+2. Check system clock synchronization
+3. Increase token expiration in config
+4. Re-authenticate: `example-cli login`
+
+Problem: Permission denied error
+Solution:
+1. Verify user has required permissions
+2. Check role assignments: `example-cli user-info`
+3. Contact administrator for role updates
+4. Review access control policies
+
+Performance Issues
+------------------
+
+Problem: Slow response times
+Solution:
+1. Check server resource usage (CPU, memory, disk)
+2. Review database query performance
+3. Enable caching if not already enabled
+4. Increase worker threads in config
+5. Consider horizontal scaling
+
+Problem: High memory usage
+Solution:
+1. Check for memory leaks: `example-cli diagnostics memory`
+2. Reduce cache size in configuration
+3. Restart the service to clear memory
+4. Increase available system memory
+5. Enable memory limits in Docker
+
+Problem: Database connection pool exhausted
+Solution:
+1. Increase pool size: `db_pool_size: 20`
+2. Check for connection leaks
+3. Reduce connection timeout
+4. Review long-running queries
+5. Consider connection pooling proxy
+
+Data Issues
+-----------
+
+Problem: Data not syncing
+Solution:
+1. Check sync status: `example-cli sync-status`
+2. Verify network connectivity to sync server
+3. Check for conflicting records
+4. Force full sync: `example-cli sync --full`
+5. Review sync logs for errors
+
+Problem: Data corruption detected
+Solution:
+1. Stop the service immediately
+2. Restore from latest backup
+3. Run integrity check: `example-cli check-integrity`
+4. Report issue to support with logs
+5. Enable additional data validation
+
+Problem: Import/export failures
+Solution:
+1. Verify file format is correct
+2. Check file permissions
+3. Ensure sufficient disk space
+4. Try smaller batch sizes
+5. Review import logs for specific errors
+
+Service Startup Issues
+----------------------
+
+Problem: Service fails to start
+Solution:
+1. Check logs: `example-cli logs --tail 100`
+2. Verify configuration file syntax
+3. Ensure required ports are available
+4. Check dependency services are running
+5. Run in debug mode: `example-cli start --debug`
+
+Problem: Port already in use
+Solution:
+1. Find process using port: `lsof -i :8080` or `netstat -tulpn | grep 8080`
+2. Stop conflicting process
+3. Change port in configuration
+4. Wait for port to be released after previous shutdown
+
+Problem: Configuration file errors
+Solution:
+1. Validate config: `example-cli config validate`
+2. Check YAML/JSON syntax
+3. Verify all required fields are present
+4. Review recent changes to config
+5. Use default config as reference
+
+Logging and Diagnostics
+-----------------------
+
+To enable debug logging:
+    example-cli config set logging.level DEBUG
+    example-cli restart
+
+To collect diagnostic information:
+    example-cli diagnostics collect --output diagnostics.tar.gz
+
+To view real-time logs:
+    example-cli logs --follow
+
+To analyze performance:
+    example-cli diagnostics performance --duration 60
+
+Getting Help
+------------
+
+If you cannot resolve the issue:
+
+1. Collect diagnostic information
+2. Check the knowledge base at https://help.example.com
+3. Search community forums at https://community.example.com
+4. Contact support at support@example.com
+5. Include logs and diagnostic output in support requests

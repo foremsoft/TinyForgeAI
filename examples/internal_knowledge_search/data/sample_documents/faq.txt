@@ -1,0 +1,125 @@
+FREQUENTLY ASKED QUESTIONS (FAQ)
+=================================
+
+ACCOUNT & BILLING
+-----------------
+
+Q: How do I reset my password?
+A: Click "Forgot Password" on the login page, enter your email, and follow
+   the instructions in the reset email. The link expires after 24 hours.
+
+Q: Can I change my email address?
+A: Yes, go to Settings > Account > Email. You'll need to verify the new
+   email address before the change takes effect.
+
+Q: How do I upgrade my subscription plan?
+A: Navigate to Settings > Billing > Upgrade Plan. Select your new plan
+   and complete the payment. The upgrade takes effect immediately.
+
+Q: What payment methods do you accept?
+A: We accept all major credit cards (Visa, MasterCard, Amex, Discover),
+   PayPal, and wire transfers for annual enterprise contracts.
+
+Q: Can I get a refund?
+A: Monthly subscriptions can be refunded within 7 days of purchase.
+   Annual subscriptions can receive a prorated refund within 30 days.
+   Contact billing@example.com to request a refund.
+
+Q: How do I cancel my subscription?
+A: Go to Settings > Billing > Cancel Subscription. Your access continues
+   until the end of your current billing period.
+
+FEATURES & FUNCTIONALITY
+------------------------
+
+Q: How many team members can I add?
+A: This depends on your plan:
+   - Starter: Up to 5 members
+   - Professional: Up to 25 members
+   - Enterprise: Unlimited members
+
+Q: Is there an API available?
+A: Yes, all plans include REST API access. Documentation is available at
+   https://docs.example.com/api. Rate limits vary by plan.
+
+Q: Can I export my data?
+A: Yes, go to Settings > Data > Export to download all your data in JSON
+   or CSV format. Large exports may take up to 24 hours to process.
+
+Q: Do you support single sign-on (SSO)?
+A: SSO is available on Professional and Enterprise plans. We support
+   SAML 2.0, OAuth 2.0, and OIDC protocols.
+
+Q: Is there a mobile app?
+A: Yes, our mobile app is available for iOS and Android. Download from
+   the App Store or Google Play Store.
+
+SECURITY & PRIVACY
+------------------
+
+Q: Is my data encrypted?
+A: Yes, we use AES-256 encryption for data at rest and TLS 1.3 for data
+   in transit. All database connections are encrypted.
+
+Q: Where is my data stored?
+A: Data is stored in AWS data centers. US customers: us-east-1 region.
+   EU customers: eu-west-1 region. Enterprise customers can choose
+   their preferred region.
+
+Q: Are you GDPR compliant?
+A: Yes, we are fully GDPR compliant. Our Data Processing Agreement (DPA)
+   is available at https://example.com/legal/dpa
+
+Q: Do you have SOC 2 certification?
+A: Yes, we maintain SOC 2 Type II certification. Audit reports are
+   available to Enterprise customers under NDA.
+
+Q: How do I enable two-factor authentication?
+A: Go to Settings > Security > Two-Factor Authentication. We support
+   authenticator apps (Google Authenticator, Authy) and SMS.
+
+TECHNICAL SUPPORT
+-----------------
+
+Q: What are your support hours?
+A: Standard support: Monday-Friday, 9 AM - 6 PM EST
+   Enterprise support: 24/7 with dedicated support engineer
+
+Q: How long does it take to get a response?
+A: Response times by plan:
+   - Starter: 48 hours
+   - Professional: 24 hours
+   - Enterprise: 4 hours (critical issues: 1 hour)
+
+Q: Do you offer training?
+A: Yes, we offer:
+   - Free onboarding webinars (weekly)
+   - Video tutorials in our knowledge base
+   - Custom training for Enterprise customers
+
+Q: Is there a community forum?
+A: Yes, join our community at https://community.example.com to connect
+   with other users, share best practices, and get peer support.
+
+Q: How do I report a bug?
+A: Use the in-app feedback button or email bugs@example.com. Include
+   steps to reproduce, expected vs actual behavior, and screenshots.
+
+INTEGRATIONS
+------------
+
+Q: What integrations are available?
+A: Native integrations include:
+   - Slack, Microsoft Teams
+   - Jira, Asana, Trello
+   - Salesforce, HubSpot
+   - GitHub, GitLab, Bitbucket
+   - Zapier (3000+ app connections)
+
+Q: How do I set up webhooks?
+A: Go to Settings > Integrations > Webhooks. Add your endpoint URL,
+   select events to trigger, and save. Test with the "Send Test" button.
+
+Q: Can I build custom integrations?
+A: Yes, use our REST API or contact our solutions team for custom
+   integration development (Enterprise plans only).

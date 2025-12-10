@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/foremsoft/TinyForgeAI/actions/workflows/ci.yml/badge.svg)](https://github.com/foremsoft/TinyForgeAI/actions/workflows/ci.yml)
 [![Docker](https://github.com/foremsoft/TinyForgeAI/actions/workflows/docker_build.yml/badge.svg)](https://github.com/foremsoft/TinyForgeAI/actions/workflows/docker_build.yml)
+[![codecov](https://codecov.io/gh/foremsoft/TinyForgeAI/graph/badge.svg)](https://codecov.io/gh/foremsoft/TinyForgeAI)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Release](https://img.shields.io/badge/release-v0.1.0-green.svg)](https://github.com/foremsoft/TinyForgeAI/releases)
@@ -389,6 +390,12 @@ Each deployment includes managed Kubernetes, container registry, object storage,
 
 - [Training Quick Start](examples/training/quick_start.py) - Train a model in minutes
 - [RAG Quick Start](examples/rag/quick_start_rag.py) - Index and search documents
+
+## Community & Support
+
+- [GitHub Discussions](https://github.com/foremsoft/TinyForgeAI/discussions) - Questions, ideas, and community support
+- [GitHub Issues](https://github.com/foremsoft/TinyForgeAI/issues) - Bug reports and feature requests
+- [Wiki](https://github.com/foremsoft/TinyForgeAI/wiki) - Tutorials and guides
 
 ## Contributing
 

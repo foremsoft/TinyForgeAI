@@ -1,0 +1,74 @@
+# Technical Manual Assistant Configuration
+# =========================================
+
+# Base model for fine-tuning
+model:
+  base: gpt2                    # Base model (gpt2, gpt2-medium, etc.)
+  output_dir: ./models/technical_assistant
+  save_strategy: epoch
+
+# Training parameters
+training:
+  epochs: 3
+  batch_size: 4
+  gradient_accumulation_steps: 2
+  learning_rate: 2.0e-5
+  warmup_steps: 100
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+
+  # LoRA configuration (for efficient fine-tuning)
+  use_lora: true
+  lora_r: 16
+  lora_alpha: 32
+  lora_dropout: 0.1
+  lora_target_modules:
+    - c_attn
+    - c_proj
+
+# Data parameters
+data:
+  train_file: ./data/training_data.jsonl
+  validation_split: 0.1
+  max_length: 512
+
+  # Input/output column names in JSONL
+  input_column: input
+  output_column: output
+
+# Generation parameters (for inference)
+generation:
+  max_new_tokens: 256
+  temperature: 0.7
+  top_p: 0.9
+  do_sample: true
+  repetition_penalty: 1.1
+
+# API server settings
+server:
+  host: 0.0.0.0
+  port: 8002
+  cors_origins:
+    - "*"
+
+# Logging
+logging:
+  level: INFO
+  log_dir: ./logs
+  tensorboard: true
+
+# Data preparation settings
+data_prep:
+  # Question templates for generating Q&A pairs
+  question_templates:
+    - "How do I {action}?"
+    - "What is the procedure for {action}?"
+    - "Can you explain how to {action}?"
+    - "What steps are needed to {action}?"
+    - "How can I {action}?"
+
+  # Minimum section length to generate Q&A
+  min_section_length: 100
+
+  # Number of Q&A pairs to generate per section
+  qa_per_section: 3
