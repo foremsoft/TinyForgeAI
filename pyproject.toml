@@ -53,6 +53,9 @@ dev = [
     "pytest-cov>=4.0.0",
     "httpx>=0.24.0",
     "flake8>=6.0.0",
+    "python-multipart>=0.0.6",
+    "sqlalchemy>=2.0.0",
+    "pyyaml>=6.0.0",
 ]
 pdf = [
     "PyMuPDF>=1.23.0",
