@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tinyforgeai"
-version = "0.1.0"
+version = "0.3.0"
 description = "A lightweight platform for fine-tuning language models and deploying them as inference microservices"
 readme = "README.md"
 license = {text = "Apache-2.0"}
@@ -79,11 +79,11 @@ all = [
 foremforge = "cli.foremforge:main"
 
 [project.urls]
-Homepage = "https://github.com/anthropics/TinyForgeAI"
-Documentation = "https://github.com/anthropics/TinyForgeAI/tree/main/docs"
-Repository = "https://github.com/anthropics/TinyForgeAI"
-Issues = "https://github.com/anthropics/TinyForgeAI/issues"
-Changelog = "https://github.com/anthropics/TinyForgeAI/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/foremsoft/TinyForgeAI"
+Documentation = "https://github.com/foremsoft/TinyForgeAI/wiki"
+Repository = "https://github.com/foremsoft/TinyForgeAI"
+Issues = "https://github.com/foremsoft/TinyForgeAI/issues"
+Changelog = "https://github.com/foremsoft/TinyForgeAI/blob/main/CHANGELOG.md"
 
 [tool.setuptools.packages.find]
 where = ["."]

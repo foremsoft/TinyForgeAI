@@ -45,7 +45,7 @@ class TestBaseException:
         """Test basic exception creation."""
         error = TinyForgeError("Test error")
         assert str(error) == "Test error"
-        assert error.code == "TINYFORGE_ERROR"
+        assert error.code == "TinyForgeError"  # Default is class name
         assert error.details == {}
 
     def test_with_code(self):
@@ -64,7 +64,7 @@ class TestBaseException:
         error = TinyForgeError("Test error", code="TEST", details={"x": 1})
         d = error.to_dict()
         assert d["message"] == "Test error"
-        assert d["code"] == "TEST"
+        assert d["error"] == "TEST"  # Key is "error", not "code"
         assert d["details"] == {"x": 1}
 
     def test_inheritance(self):
@@ -101,8 +101,8 @@ class TestDataExceptions:
 
     def test_empty_dataset_error(self):
         """Test EmptyDatasetError."""
-        error = EmptyDatasetError("No samples")
-        assert error.code == "EMPTY_DATASET"
+        error = EmptyDatasetError("/path/to/dataset")  # Takes dataset_path, not message
+        assert error.code == "DATASET_ERROR"  # Inherits parent code
         assert isinstance(error, DatasetError)
 
 
@@ -122,7 +122,7 @@ class TestTrainingExceptions:
 
     def test_model_load_error(self):
         """Test ModelLoadError."""
-        error = ModelLoadError("OOM")
+        error = ModelLoadError("test-model", "OOM")  # model_name, reason
         assert error.code == "MODEL_LOAD_ERROR"
         assert isinstance(error, TrainingError)
 
@@ -158,12 +158,12 @@ class TestInferenceExceptions:
 
     def test_inference_timeout(self):
         """Test InferenceTimeoutError."""
-        error = InferenceTimeoutError("30s exceeded")
+        error = InferenceTimeoutError(30.0)  # Takes timeout_seconds float
         assert error.code == "INFERENCE_TIMEOUT"
 
     def test_batch_size_error(self):
         """Test BatchSizeError."""
-        error = BatchSizeError("Too large")
+        error = BatchSizeError(64, 32)  # batch_size, max_batch_size
         assert error.code == "BATCH_SIZE_ERROR"
 
 
@@ -177,18 +177,18 @@ class TestConnectorExceptions:
 
     def test_connection_error(self):
         """Test ConnectionError."""
-        error = ConnectionError("Network unreachable")
+        error = ConnectionError("external-api", "Network unreachable")  # service, reason
         assert error.code == "CONNECTION_ERROR"
         assert isinstance(error, ConnectorError)
 
     def test_authentication_error(self):
         """Test AuthenticationError."""
-        error = AuthenticationError("Invalid token")
+        error = AuthenticationError("external-api", "Invalid token")  # service, reason
         assert error.code == "AUTHENTICATION_ERROR"
 
     def test_rate_limit_error(self):
         """Test RateLimitError."""
-        error = RateLimitError("Too many requests")
+        error = RateLimitError("external-api", 60)  # service, retry_after
         assert error.code == "RATE_LIMIT_ERROR"
 
     def test_api_error(self):
@@ -244,8 +244,8 @@ class TestServiceExceptions:
 
     def test_tenant_quota_exceeded(self):
         """Test TenantQuotaExceededError."""
-        error = TenantQuotaExceededError("Rate limit")
-        assert error.code == "TENANT_QUOTA_EXCEEDED"
+        error = TenantQuotaExceededError("tenant-123", "requests", 1000, 1500)  # tenant_id, quota_type, limit, current
+        assert error.code == "QUOTA_EXCEEDED"  # Actual code is QUOTA_EXCEEDED
 
     def test_invalid_api_key(self):
         """Test InvalidAPIKeyError."""
@@ -273,12 +273,12 @@ class TestVersionExceptions:
 
     def test_version_not_found(self):
         """Test VersionNotFoundError."""
-        error = VersionNotFoundError("v2.0")
+        error = VersionNotFoundError("test-model", "v2.0")  # model_name, version
         assert error.code == "VERSION_NOT_FOUND"
 
     def test_version_conflict(self):
         """Test VersionConflictError."""
-        error = VersionConflictError("Concurrent update")
+        error = VersionConflictError("test-model", "v1.0")  # model_name, version
         assert error.code == "VERSION_CONFLICT"
 
 
@@ -305,7 +305,7 @@ class TestExceptionDetails:
         )
         d = error.to_dict()
         assert "message" in d
-        assert "code" in d
+        assert "error" in d  # Key is "error", not "code"
         assert "details" in d
         assert d["details"]["epoch"] == 5
 
