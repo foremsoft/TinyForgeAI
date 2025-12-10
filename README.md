@@ -382,6 +382,7 @@ Each deployment includes managed Kubernetes, container registry, object storage,
 - [Contributing Guide](docs/CONTRIBUTING.md) - How to contribute
 - [Training Guide](docs/training.md) - Training details
 - [Connectors Guide](docs/connectors.md) - Data source integrations
+- [Use Cases Guide](docs/use_cases.md) - Practical use cases with examples
 - [Docker Guide](docker/README.md) - Container deployment
 
 ### Examples
