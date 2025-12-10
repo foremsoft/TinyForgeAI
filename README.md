@@ -59,6 +59,13 @@ TinyForgeAI gives you **your own small, focused language model** trained only on
 - Generates complete FastAPI service + Dockerfile + docker-compose
 - Dashboard API with Prometheus metrics for monitoring
 
+### Model Registry
+- **Semantic Versioning**: Full SemVer 2.0.0 support with major, minor, patch bumping
+- **Lifecycle Management**: Draft, Active, Staged, Deprecated, Archived states
+- **Model Cards**: HuggingFace-style documentation with markdown export
+- **Training Provenance**: Track metrics, configuration, data sources, and lineage
+- **CLI Interface**: Full command-line management (`python -m backend.model_registry.cli`)
+
 ### Production-Ready Backend
 - **Rate Limiting**: Configurable rate limiting with sliding window (in-memory or Redis-based for distributed deployments)
 - **Webhooks**: Event-driven notifications for job status changes, model training, and system events
@@ -81,6 +88,8 @@ foremforge serve --dir ./service --dry-run
 | Google Docs | ✔ (mock mode) | No OAuth needed in test environments |
 | Google Drive | ✔ | Files, folders, workspace exports |
 | Notion | ✔ | Pages, databases, properties |
+| Slack | ✔ | Channels, messages, threads |
+| Confluence | ✔ | Spaces, pages, search |
 | File Ingesters | ✔ | PDF/DOCX/TXT/MD |
 | REST APIs | ✔ | Pagination, auth, rate limiting |
 
@@ -412,7 +421,7 @@ Apache License 2.0 - see [LICENSE](LICENSE) for details.
 - [x] REST API connector with pagination and auth support
 - [x] Google Drive connector with workspace file exports
 - [x] Notion connector for pages and databases
-- [ ] Model versioning and registry
+- [x] Model versioning and registry
 
 ---
 

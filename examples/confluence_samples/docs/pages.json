@@ -1,0 +1,44 @@
+[
+  {
+    "id": "100001",
+    "title": "Getting Started Guide",
+    "type": "page",
+    "status": "current",
+    "version": {"number": 5},
+    "body": {
+      "storage": {
+        "value": "<h1>Getting Started Guide</h1><p>Welcome to TinyForgeAI! This guide will help you get up and running quickly.</p><h2>Installation</h2><p>To install TinyForgeAI, run the following command:</p><pre>pip install tinyforgeai</pre><h2>Quick Start</h2><p>After installation, you can train your first model with:</p><pre>foremforge train --data your_data.jsonl --out ./model</pre>"
+      }
+    },
+    "ancestors": [],
+    "_links": {"webui": "/wiki/spaces/DOCS/pages/100001"}
+  },
+  {
+    "id": "100002",
+    "title": "API Reference",
+    "type": "page",
+    "status": "current",
+    "version": {"number": 3},
+    "body": {
+      "storage": {
+        "value": "<h1>API Reference</h1><p>Complete API documentation for TinyForgeAI.</p><h2>Training API</h2><p>The training API provides methods for:</p><ul><li>Loading datasets</li><li>Configuring training parameters</li><li>Running training jobs</li><li>Monitoring progress</li></ul><h2>Inference API</h2><p>The inference API allows you to:</p><ul><li>Load trained models</li><li>Run predictions</li><li>Batch processing</li></ul>"
+      }
+    },
+    "ancestors": [{"id": "100001"}],
+    "_links": {"webui": "/wiki/spaces/DOCS/pages/100002"}
+  },
+  {
+    "id": "100003",
+    "title": "FAQ",
+    "type": "page",
+    "status": "current",
+    "version": {"number": 8},
+    "body": {
+      "storage": {
+        "value": "<h1>Frequently Asked Questions</h1><h2>What is TinyForgeAI?</h2><p>TinyForgeAI is a framework for training small, focused language models from your own data.</p><h2>What hardware do I need?</h2><p>For dry-run mode, any modern computer works. For real training, a GPU with at least 8GB VRAM is recommended.</p><h2>How do I prepare my data?</h2><p>Your training data should be in JSONL format with 'input' and 'output' fields.</p>"
+      }
+    },
+    "ancestors": [{"id": "100001"}],
+    "_links": {"webui": "/wiki/spaces/DOCS/pages/100003"}
+  }
+]

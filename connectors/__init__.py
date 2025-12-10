@@ -6,6 +6,8 @@ from connectors.file_ingest import ingest_file, get_supported_formats
 from connectors.google_docs_connector import fetch_doc_text, list_docs_in_folder
 from connectors.google_drive_connector import GoogleDriveConnector, GoogleDriveConfig, DriveFile
 from connectors.notion_connector import NotionConnector, NotionConfig, NotionPage, NotionDatabase
+from connectors.slack_connector import SlackConnector, SlackConfig, SlackChannel, SlackMessage, SlackUser
+from connectors.confluence_connector import ConfluenceConnector, ConfluenceConfig, ConfluenceSpace, ConfluencePage
 
 # Async connectors - import conditionally to avoid import errors if dependencies missing
 try:
@@ -17,6 +19,21 @@ try:
     from connectors.async_db_connector import AsyncDBConnector
 except ImportError:
     AsyncDBConnector = None  # type: ignore
+
+try:
+    from connectors.async_google_drive_connector import AsyncGoogleDriveConnector
+except ImportError:
+    AsyncGoogleDriveConnector = None  # type: ignore
+
+try:
+    from connectors.async_notion_connector import AsyncNotionConnector
+except ImportError:
+    AsyncNotionConnector = None  # type: ignore
+
+try:
+    from connectors.async_slack_connector import AsyncSlackConnector
+except ImportError:
+    AsyncSlackConnector = None  # type: ignore
 
 __all__ = [
     # Sync connectors
@@ -37,7 +54,21 @@ __all__ = [
     "NotionConfig",
     "NotionPage",
     "NotionDatabase",
+    # Slack
+    "SlackConnector",
+    "SlackConfig",
+    "SlackChannel",
+    "SlackMessage",
+    "SlackUser",
+    # Confluence
+    "ConfluenceConnector",
+    "ConfluenceConfig",
+    "ConfluenceSpace",
+    "ConfluencePage",
     # Async connectors
     "AsyncAPIConnector",
     "AsyncDBConnector",
+    "AsyncGoogleDriveConnector",
+    "AsyncNotionConnector",
+    "AsyncSlackConnector",
 ]

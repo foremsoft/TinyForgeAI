@@ -1,0 +1,35 @@
+[
+  {
+    "id": "U001ALICE",
+    "name": "alice",
+    "profile": {
+      "real_name": "Alice Smith",
+      "display_name": "alice"
+    },
+    "is_bot": false,
+    "is_admin": true,
+    "deleted": false
+  },
+  {
+    "id": "U002BOB",
+    "name": "bob",
+    "profile": {
+      "real_name": "Bob Johnson",
+      "display_name": "bob"
+    },
+    "is_bot": false,
+    "is_admin": false,
+    "deleted": false
+  },
+  {
+    "id": "U003CAROL",
+    "name": "carol",
+    "profile": {
+      "real_name": "Carol Williams",
+      "display_name": "carol"
+    },
+    "is_bot": false,
+    "is_admin": false,
+    "deleted": false
+  }
+]

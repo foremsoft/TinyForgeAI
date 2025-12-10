@@ -1,0 +1,65 @@
+[
+  {
+    "ts": "1702000001.000001",
+    "text": "How do I reset my password?",
+    "user": "U002BOB",
+    "reply_count": 2,
+    "reactions": [{"name": "eyes", "count": 1}]
+  },
+  {
+    "ts": "1702000002.000002",
+    "text": "Go to Settings > Security > Change Password. You'll need your current password.",
+    "user": "U001ALICE",
+    "thread_ts": "1702000001.000001"
+  },
+  {
+    "ts": "1702000003.000003",
+    "text": "If you forgot your current password, use the Forgot Password link on the login page.",
+    "user": "U003CAROL",
+    "thread_ts": "1702000001.000001"
+  },
+  {
+    "ts": "1702000010.000010",
+    "text": "What's the deployment process for the new API?",
+    "user": "U002BOB",
+    "reply_count": 1,
+    "reactions": [{"name": "+1", "count": 3}]
+  },
+  {
+    "ts": "1702000011.000011",
+    "text": "1. Create a PR with your changes\n2. Get at least 2 approvals\n3. Merge to main\n4. CI/CD will automatically deploy to staging\n5. After testing, promote to production via the deploy dashboard",
+    "user": "U001ALICE",
+    "thread_ts": "1702000010.000010"
+  },
+  {
+    "ts": "1702000020.000020",
+    "text": "Good morning everyone!",
+    "user": "U003CAROL",
+    "reply_count": 0
+  },
+  {
+    "ts": "1702000021.000021",
+    "text": "Good morning! Ready for standup?",
+    "user": "U001ALICE",
+    "reply_count": 0
+  },
+  {
+    "ts": "1702000030.000030",
+    "text": "Can someone explain how our rate limiting works?",
+    "user": "U003CAROL",
+    "reply_count": 2,
+    "reactions": [{"name": "question", "count": 1}]
+  },
+  {
+    "ts": "1702000031.000031",
+    "text": "We use a sliding window algorithm with Redis. Each API key gets 100 requests per minute.",
+    "user": "U001ALICE",
+    "thread_ts": "1702000030.000030"
+  },
+  {
+    "ts": "1702000032.000032",
+    "text": "For higher limits, users can upgrade to premium which gives 1000 requests per minute.",
+    "user": "U002BOB",
+    "thread_ts": "1702000030.000030"
+  }
+]

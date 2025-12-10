@@ -1,0 +1,35 @@
+[
+  {
+    "id": "C001GENERAL",
+    "name": "general",
+    "is_private": false,
+    "is_archived": false,
+    "is_member": true,
+    "topic": {"value": "General discussion"},
+    "purpose": {"value": "Company-wide announcements and discussions"},
+    "num_members": 50,
+    "created": 1609459200
+  },
+  {
+    "id": "C002ENGINEERING",
+    "name": "engineering",
+    "is_private": false,
+    "is_archived": false,
+    "is_member": true,
+    "topic": {"value": "Engineering team discussions"},
+    "purpose": {"value": "Technical discussions, code reviews, and architecture decisions"},
+    "num_members": 25,
+    "created": 1609459200
+  },
+  {
+    "id": "C003SUPPORT",
+    "name": "support",
+    "is_private": false,
+    "is_archived": false,
+    "is_member": true,
+    "topic": {"value": "Customer support"},
+    "purpose": {"value": "Handle customer inquiries and issues"},
+    "num_members": 15,
+    "created": 1609459200
+  }
+]

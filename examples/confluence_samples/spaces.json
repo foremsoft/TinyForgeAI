@@ -1,0 +1,29 @@
+[
+  {
+    "id": "123456",
+    "key": "DOCS",
+    "name": "Documentation",
+    "type": "global",
+    "status": "current",
+    "description": {"plain": {"value": "Product documentation and guides"}},
+    "homepage": {"id": "100001"}
+  },
+  {
+    "id": "234567",
+    "key": "ENG",
+    "name": "Engineering",
+    "type": "global",
+    "status": "current",
+    "description": {"plain": {"value": "Engineering team wiki"}},
+    "homepage": {"id": "200001"}
+  },
+  {
+    "id": "345678",
+    "key": "KB",
+    "name": "Knowledge Base",
+    "type": "global",
+    "status": "current",
+    "description": {"plain": {"value": "Internal knowledge base and FAQs"}},
+    "homepage": {"id": "300001"}
+  }
+]

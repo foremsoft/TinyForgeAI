@@ -59,9 +59,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Automatic traffic splitting
 - Statistical significance testing
 
+### Added - Confluence Connector
+- **ConfluenceConnector**: Access pages and spaces from Atlassian Confluence
+  - List spaces with type filtering (global, personal)
+  - List and search pages with CQL queries
+  - Get page content with HTML to text conversion
+  - Stream training samples from wiki pages
+  - Mock mode for offline development (`CONFLUENCE_MOCK=true`)
+  - Support for Atlassian Cloud API authentication
+
+### Added - Slack Connector
+- **SlackConnector**: Access messages and conversations from Slack workspaces
+  - List channels (public, private, DMs)
+  - Get messages from channels with pagination
+  - Get thread replies for conversation context
+  - Stream training samples with multiple modes:
+    - Thread Q&A: Extract question/answer pairs from threads
+    - Consecutive: Create pairs from consecutive messages
+    - Reaction filter: Extract messages with specific reactions
+  - Message text cleaning (removes mentions, URLs, special commands)
+  - Mock mode for offline development (`SLACK_MOCK=true`)
+  - User caching for efficient lookups
+- **AsyncSlackConnector**: Async version of Slack connector
+  - Full async/await support using httpx
+  - Concurrent channel message fetching
+  - Async context manager for resource management
+
+### Added - Async Connectors
+- **AsyncGoogleDriveConnector**: Async version of Google Drive connector
+  - Full async/await support using httpx
+  - Concurrent file fetching with configurable limits
+  - Async context manager for resource management
+- **AsyncNotionConnector**: Async version of Notion connector
+  - Full async/await support using httpx
+  - Concurrent page content fetching
+  - Async streaming of training samples
+
+### Added - Model Versioning and Registry
+- **ModelRegistry**: Centralized model version management
+  - Semantic versioning (SemVer 2.0.0) with major, minor, patch bumping
+  - Version lifecycle states: Draft, Active, Staged, Deprecated, Archived
+  - Version comparison, rollback, and search capabilities
+  - Artifact storage and export functionality
+- **ModelMetadata**: Comprehensive training provenance tracking
+  - Training configuration (epochs, batch_size, LoRA settings)
+  - Training metrics (loss, accuracy, BLEU, ROUGE, F1)
+  - Data source tracking and lineage
+- **ModelCard**: HuggingFace-style model documentation
+  - Markdown export for model cards
+  - Intended use, limitations, ethical considerations
+- **CLI Interface**: Full command-line management
+  - `list`, `versions`, `info`, `register`, `activate`, `deprecate`
+  - `compare`, `export`, `rollback`, `search` commands
+
 ### Changed
 - Updated CI/CD pipeline with new module import tests
-- Expanded test suite to 460+ tests
+- Expanded test suite to 550+ tests
 
 ---
 

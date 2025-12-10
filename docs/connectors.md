@@ -23,6 +23,8 @@ The Data Connector Layer provides a unified interface for ingesting training dat
 | REST APIs | `APIConnector` | Implemented | `API_MOCK=true` |
 | Google Drive | `GoogleDriveConnector` | Implemented | `GOOGLE_DRIVE_MOCK=true` |
 | Notion | `NotionConnector` | Implemented | `NOTION_MOCK=true` |
+| Slack | `SlackConnector` | Implemented | `SLACK_MOCK=true` |
+| Confluence | `ConfluenceConnector` | Implemented | `CONFLUENCE_MOCK=true` |
 
 ### Architecture
 
@@ -883,6 +885,351 @@ When extracting page content, these block types are parsed:
 
 ---
 
+## Slack Connector
+
+The Slack connector accesses messages and conversations from Slack workspaces. It includes a **mock mode** for offline development and supports multiple streaming modes for extracting training samples.
+
+### Quick Start
+
+```python
+from connectors.slack_connector import SlackConnector, SlackConfig
+
+# Create connector (uses mock mode by default)
+connector = SlackConnector()
+
+# List channels
+channels = connector.list_channels()
+for ch in channels:
+    print(f"{ch.id}: {ch.name}")
+
+# Get messages from a channel
+messages = connector.get_messages("general", limit=50)
+for msg in messages:
+    print(f"{msg.user_id}: {msg.text}")
+
+# Get thread replies
+replies = connector.get_thread_replies("general", "1234567890.123456")
+
+# Stream training samples
+mapping = {"input": "question", "output": "answer"}
+for sample in connector.stream_samples("general", mapping, mode="thread_qa"):
+    print(sample)
+```
+
+### Configuration
+
+```python
+from connectors.slack_connector import SlackConfig
+
+config = SlackConfig(
+    # Authentication
+    bot_token="xoxb-xxx...",  # Slack bot token
+
+    # Mock mode (default: True)
+    mock_mode=False,
+    samples_dir="./my_samples/",  # Custom mock samples directory
+
+    # Query settings
+    default_limit=100,
+    include_archived=False,
+)
+
+connector = SlackConnector(config)
+```
+
+### Mock Mode (Default)
+
+By default, the connector runs in mock mode (`SLACK_MOCK=true`). In this mode, it reads from local sample files in `examples/slack_samples/`.
+
+```bash
+# Enable mock mode (default)
+export SLACK_MOCK=true
+
+# Disable mock mode (use real Slack API)
+export SLACK_MOCK=false
+export SLACK_BOT_TOKEN="xoxb-xxx..."
+```
+
+### Streaming Modes
+
+The connector supports multiple streaming modes for extracting training samples:
+
+#### Thread Q&A Mode (Default)
+Extracts question/answer pairs from threaded conversations. The first message in a thread is treated as the question, and replies are treated as answers.
+
+```python
+for sample in connector.stream_samples("general", mapping, mode="thread_qa"):
+    print(sample)
+# Returns: {"input": "How do I...?", "output": "You can...", "metadata": {...}}
+```
+
+#### Consecutive Mode
+Creates pairs from consecutive messages in a channel.
+
+```python
+for sample in connector.stream_samples("general", mapping, mode="consecutive"):
+    print(sample)
+```
+
+#### Reaction Filter Mode
+Extracts messages that have specific reactions (e.g., messages marked with thumbsup).
+
+```python
+for sample in connector.stream_samples(
+    "general",
+    mapping,
+    mode="reaction_filter",
+    reaction_filter=["thumbsup", "white_check_mark"]
+):
+    print(sample)
+```
+
+### Message Text Cleaning
+
+The connector automatically cleans message text by:
+- Removing user mentions (`<@U123>` → `@user`)
+- Removing channel mentions (`<#C123>` → `#channel`)
+- Removing URLs (`<https://...>` → `https://...`)
+- Removing special Slack commands
+
+```python
+# Manual text cleaning
+clean_text = connector._clean_message_text(raw_text)
+```
+
+### CLI Usage
+
+```bash
+# List channels (mock mode)
+python connectors/slack_connector.py --list
+
+# Get messages from a channel
+python connectors/slack_connector.py --channel general --limit 50
+
+# Get thread replies
+python connectors/slack_connector.py --channel general --thread 1234567890.123456
+
+# Stream training samples
+python connectors/slack_connector.py --stream --channel general \
+    --mapping '{"input": "question", "output": "answer"}' \
+    --mode thread_qa
+```
+
+### Setting Up Slack App (Real Mode)
+
+1. **Create a Slack App** at https://api.slack.com/apps
+2. **Add Bot Token Scopes**:
+   - `channels:history` - View messages in public channels
+   - `channels:read` - View basic channel information
+   - `groups:history` - View messages in private channels (optional)
+   - `groups:read` - View basic private channel information (optional)
+   - `users:read` - View users in the workspace
+3. **Install the app** to your workspace
+4. **Copy the Bot User OAuth Token** (starts with `xoxb-`)
+5. **Configure the connector**:
+
+```bash
+export SLACK_MOCK=false
+export SLACK_BOT_TOKEN="xoxb-xxx..."
+```
+
+```python
+config = SlackConfig(
+    mock_mode=False,
+    bot_token="xoxb-xxx...",
+)
+connector = SlackConnector(config)
+```
+
+### Async Slack Connector
+
+For high-performance applications, use the async version:
+
+```python
+from connectors.async_slack_connector import AsyncSlackConnector
+
+async with AsyncSlackConnector() as connector:
+    # Concurrent message fetching
+    channels = ["general", "random", "help"]
+    messages = await connector.fetch_messages_concurrent(channels, max_concurrency=5)
+
+    # Async streaming
+    async for sample in connector.stream_samples("general", mapping):
+        print(sample)
+```
+
+---
+
+## Confluence Connector
+
+The Confluence connector accesses pages and spaces from Atlassian Confluence. It includes a **mock mode** for offline development and supports HTML to text conversion.
+
+### Quick Start
+
+```python
+from connectors.confluence_connector import ConfluenceConnector, ConfluenceConfig
+
+# Create connector (uses mock mode by default)
+connector = ConfluenceConnector()
+
+# List spaces
+spaces = connector.list_spaces()
+for space in spaces:
+    print(f"{space.key}: {space.name}")
+
+# List pages in a space
+pages = connector.list_pages(space_key="DOCS")
+for page in pages:
+    print(f"{page.id}: {page.title}")
+
+# Get page content
+content = connector.get_page_content(page_id="12345")
+
+# Stream training samples
+mapping = {"input": "title", "output": "content"}
+for sample in connector.stream_samples("DOCS", mapping):
+    print(sample)
+```
+
+### Configuration
+
+```python
+from connectors.confluence_connector import ConfluenceConfig
+
+config = ConfluenceConfig(
+    # Authentication
+    base_url="https://your-domain.atlassian.net/wiki",
+    username="your-email@example.com",
+    api_token="your-api-token",
+
+    # Mock mode (default: True)
+    mock_mode=False,
+    samples_dir="./my_samples/",  # Custom mock samples directory
+
+    # Query settings
+    page_size=25,
+)
+
+connector = ConfluenceConnector(config)
+```
+
+### Mock Mode (Default)
+
+By default, the connector runs in mock mode (`CONFLUENCE_MOCK=true`). In this mode, it reads from local sample files in `examples/confluence_samples/`.
+
+```bash
+# Enable mock mode (default)
+export CONFLUENCE_MOCK=true
+
+# Disable mock mode (use real Confluence API)
+export CONFLUENCE_MOCK=false
+export CONFLUENCE_BASE_URL="https://your-domain.atlassian.net/wiki"
+export CONFLUENCE_USERNAME="your-email@example.com"
+export CONFLUENCE_API_TOKEN="your-api-token"
+```
+
+### Listing Spaces
+
+```python
+# List all spaces
+spaces = connector.list_spaces()
+
+# Filter by type
+global_spaces = connector.list_spaces(type_filter="global")
+personal_spaces = connector.list_spaces(type_filter="personal")
+
+# Filter by status
+active_spaces = connector.list_spaces(status="current")
+```
+
+### Searching Pages
+
+Use CQL (Confluence Query Language) for advanced searches:
+
+```python
+# Search by text
+results = connector.search("password reset", space_key="DOCS")
+
+# Search with CQL
+results = connector.search(
+    query='type=page AND label="important"',
+    space_key="DOCS",
+    limit=50
+)
+```
+
+### HTML to Text Conversion
+
+The connector automatically converts HTML content to plain text:
+
+```python
+from connectors.confluence_connector import html_to_text
+
+html = "<p>Hello <strong>world</strong>!</p><ul><li>Item 1</li></ul>"
+text = html_to_text(html)
+# Returns: "Hello world!\n\n- Item 1"
+```
+
+### CLI Usage
+
+```bash
+# List spaces (mock mode)
+python connectors/confluence_connector.py --list-spaces
+
+# List pages in a space
+python connectors/confluence_connector.py --list-pages --space-key DOCS
+
+# Get page content
+python connectors/confluence_connector.py --page-id 12345 --content
+
+# Search pages
+python connectors/confluence_connector.py --search "password reset" --space-key DOCS
+
+# Stream training samples
+python connectors/confluence_connector.py --stream --space-key DOCS \
+    --mapping '{"input": "title", "output": "content"}'
+```
+
+### Setting Up Confluence API (Real Mode)
+
+1. **Generate an API token** at https://id.atlassian.com/manage-profile/security/api-tokens
+2. **Note your Confluence URL** (e.g., `https://your-domain.atlassian.net/wiki`)
+3. **Configure the connector**:
+
+```bash
+export CONFLUENCE_MOCK=false
+export CONFLUENCE_BASE_URL="https://your-domain.atlassian.net/wiki"
+export CONFLUENCE_USERNAME="your-email@example.com"
+export CONFLUENCE_API_TOKEN="your-api-token"
+```
+
+```python
+config = ConfluenceConfig(
+    mock_mode=False,
+    base_url="https://your-domain.atlassian.net/wiki",
+    username="your-email@example.com",
+    api_token="your-api-token",
+)
+connector = ConfluenceConnector(config)
+```
+
+### Content Formats
+
+When retrieving page content, you can specify the format:
+
+```python
+# Plain text (default) - HTML is converted to text
+text = connector.get_page_content(page_id="12345", format="text")
+
+# Raw HTML storage format
+html = connector.get_page_content(page_id="12345", format="storage")
+
+# View format (rendered HTML)
+html = connector.get_page_content(page_id="12345", format="view")
+```
+
+---
+
 ## Adding a New Connector
 
 To add a new connector, follow these patterns:
@@ -1005,6 +1352,12 @@ Add a section to this file documenting the new connector.
 | `GOOGLE_DRIVE_MOCK` | `true` | Enable mock mode for Google Drive |
 | `NOTION_MOCK` | `true` | Enable mock mode for Notion |
 | `NOTION_API_TOKEN` | - | Notion integration token |
+| `SLACK_MOCK` | `true` | Enable mock mode for Slack |
+| `SLACK_BOT_TOKEN` | - | Slack bot token |
+| `CONFLUENCE_MOCK` | `true` | Enable mock mode for Confluence |
+| `CONFLUENCE_BASE_URL` | - | Confluence instance URL |
+| `CONFLUENCE_USERNAME` | - | Confluence username/email |
+| `CONFLUENCE_API_TOKEN` | - | Confluence API token |
 | `CONNECTOR_MOCK` | `false` | Enable mock mode for all connectors |
 | `API_BASE_URL` | - | Default REST API base URL |
 | `API_AUTH_TOKEN` | - | Default bearer token for API |
