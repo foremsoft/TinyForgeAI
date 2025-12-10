@@ -1,0 +1,5 @@
+{"input": "What is machine learning?", "output": "Machine learning is a subset of artificial intelligence that enables systems to learn and improve from experience without being explicitly programmed.", "category": "ml_basics"}
+{"input": "Explain neural networks", "output": "Neural networks are computing systems inspired by biological neural networks in the brain. They consist of interconnected nodes (neurons) organized in layers that process information.", "category": "ml_basics"}
+{"input": "What is deep learning?", "output": "Deep learning is a subset of machine learning that uses neural networks with multiple layers (deep neural networks) to learn complex patterns in data.", "category": "ml_basics"}
+{"input": "Define supervised learning", "output": "Supervised learning is a type of machine learning where the model is trained on labeled data, learning to map inputs to known outputs.", "category": "ml_types"}
+{"input": "What is unsupervised learning?", "output": "Unsupervised learning is a type of machine learning where the model learns patterns from unlabeled data without predefined outputs.", "category": "ml_types"}

@@ -30,6 +30,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Response caching with configurable TTL
   - Field mapping for training sample format
 
+### Added - Google Drive Connector
+- **GoogleDriveConnector**: Access files and folders from Google Drive
+  - List files in folders
+  - Download file content (including Google Workspace exports)
+  - Stream training samples from JSON/JSONL files
+  - Mock mode for offline development (`GOOGLE_DRIVE_MOCK=true`)
+  - Support for service account and OAuth authentication
+
+### Added - Notion Connector
+- **NotionConnector**: Access pages and databases from Notion workspaces
+  - List pages in databases with filtering
+  - Get page content with block extraction
+  - Stream training samples from database properties
+  - Mock mode for offline development (`NOTION_MOCK=true`)
+  - Support for all common Notion property types
+
 ### Added - Development Environment
 - **Docker Compose Dev Stack**: Complete development environment
   - PostgreSQL 15 database

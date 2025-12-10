@@ -1,0 +1,68 @@
+{
+  "title": "Training Data",
+  "properties": {
+    "Question": {"type": "title"},
+    "Answer": {"type": "rich_text"},
+    "Category": {"type": "select"},
+    "Status": {"type": "select"}
+  },
+  "pages": [
+    {
+      "id": "page-001",
+      "title": "What is TinyForgeAI?",
+      "properties": {
+        "Question": {
+          "type": "title",
+          "title": [{"plain_text": "What is TinyForgeAI?"}]
+        },
+        "Answer": {
+          "type": "rich_text",
+          "rich_text": [{"plain_text": "TinyForgeAI is an open-source framework for training, fine-tuning, and deploying small language models."}]
+        },
+        "Category": {
+          "type": "select",
+          "select": {"name": "General"}
+        }
+      },
+      "content": "TinyForgeAI is an open-source framework for training, fine-tuning, and deploying small language models. It provides tools for data preparation, model training, and deployment."
+    },
+    {
+      "id": "page-002",
+      "title": "How do I train a model?",
+      "properties": {
+        "Question": {
+          "type": "title",
+          "title": [{"plain_text": "How do I train a model?"}]
+        },
+        "Answer": {
+          "type": "rich_text",
+          "rich_text": [{"plain_text": "Use the training module with your prepared dataset. Configure the training parameters in a YAML file and run the training script."}]
+        },
+        "Category": {
+          "type": "select",
+          "select": {"name": "Training"}
+        }
+      },
+      "content": "To train a model, first prepare your dataset in JSONL format. Then configure training parameters and run the training script."
+    },
+    {
+      "id": "page-003",
+      "title": "What is LoRA?",
+      "properties": {
+        "Question": {
+          "type": "title",
+          "title": [{"plain_text": "What is LoRA?"}]
+        },
+        "Answer": {
+          "type": "rich_text",
+          "rich_text": [{"plain_text": "LoRA (Low-Rank Adaptation) is an efficient fine-tuning technique that adds trainable low-rank matrices to the model while keeping the original weights frozen."}]
+        },
+        "Category": {
+          "type": "select",
+          "select": {"name": "Training"}
+        }
+      },
+      "content": "LoRA is a parameter-efficient fine-tuning method that significantly reduces memory requirements."
+    }
+  ]
+}

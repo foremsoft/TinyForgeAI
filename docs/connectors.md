@@ -21,8 +21,8 @@ The Data Connector Layer provides a unified interface for ingesting training dat
 | Google Docs | `google_docs_connector` | Implemented | `GOOGLE_OAUTH_DISABLED=true` |
 | Local Files | `file_ingest` | Implemented | N/A |
 | REST APIs | `APIConnector` | Implemented | `API_MOCK=true` |
-| Google Drive | Planned | - | - |
-| Notion | Planned | - | - |
+| Google Drive | `GoogleDriveConnector` | Implemented | `GOOGLE_DRIVE_MOCK=true` |
+| Notion | `NotionConnector` | Implemented | `NOTION_MOCK=true` |
 
 ### Architecture
 
@@ -648,6 +648,241 @@ connector.clear_cache()
 
 ---
 
+## Google Drive Connector
+
+The Google Drive connector accesses files and folders from Google Drive. It includes a **mock mode** for offline development that reads from local sample files.
+
+### Quick Start
+
+```python
+from connectors.google_drive_connector import GoogleDriveConnector, GoogleDriveConfig
+
+# Create connector (uses mock mode by default)
+connector = GoogleDriveConnector()
+
+# List files in a folder
+files = connector.list_files(folder_id="my_folder")
+for f in files:
+    print(f"{f.id}: {f.name}")
+
+# Download file content
+content = connector.get_file_content(file_id="my_file")
+
+# Stream training samples
+mapping = {"input": "input", "output": "output"}
+for sample in connector.stream_samples("folder_id", mapping):
+    print(sample)
+```
+
+### Configuration
+
+```python
+from connectors.google_drive_connector import GoogleDriveConfig
+
+config = GoogleDriveConfig(
+    # Authentication
+    service_account_file="/path/to/service-account.json",  # For service accounts
+    # Or OAuth token file
+    token_file="/path/to/token.json",
+
+    # Mock mode (default: True)
+    mock_mode=False,
+    samples_dir="./my_samples/",  # Custom mock samples directory
+
+    # Query settings
+    page_size=100,
+    include_trashed=False,
+)
+
+connector = GoogleDriveConnector(config)
+```
+
+### Mock Mode (Default)
+
+By default, the connector runs in mock mode (`GOOGLE_DRIVE_MOCK=true`). In this mode, it reads from local sample files in `examples/google_drive_samples/`.
+
+```bash
+# Enable mock mode (default)
+export GOOGLE_DRIVE_MOCK=true
+
+# Disable mock mode (use real Google Drive API)
+export GOOGLE_DRIVE_MOCK=false
+```
+
+### CLI Usage
+
+```bash
+# List files (mock mode)
+python connectors/google_drive_connector.py --list
+
+# List files in a folder
+python connectors/google_drive_connector.py --list --folder-id my_folder
+
+# Download a file
+python connectors/google_drive_connector.py --file-id sample_doc
+
+# Stream training samples
+python connectors/google_drive_connector.py --stream --folder-id my_folder \
+    --mapping '{"input": "input", "output": "output"}'
+```
+
+### Setting Up Google Drive API (Real Mode)
+
+1. **Create a Google Cloud Project** and enable the Google Drive API
+2. **Create a Service Account** or OAuth credentials
+3. **Download credentials** JSON file
+4. **Configure the connector**:
+
+```bash
+export GOOGLE_DRIVE_MOCK=false
+```
+
+```python
+config = GoogleDriveConfig(
+    mock_mode=False,
+    service_account_file="./credentials/service-account.json",
+)
+connector = GoogleDriveConnector(config)
+```
+
+### Supported File Types
+
+The connector automatically handles Google Workspace files:
+
+| Google Type | Export Format |
+|-------------|---------------|
+| Google Docs | text/plain |
+| Google Sheets | text/csv |
+| Google Slides | text/plain |
+
+Native files (.txt, .json, .jsonl, .csv, .md) are downloaded as-is.
+
+---
+
+## Notion Connector
+
+The Notion connector accesses pages and databases from Notion workspaces. It includes a **mock mode** for offline development.
+
+### Quick Start
+
+```python
+from connectors.notion_connector import NotionConnector, NotionConfig
+
+# Create connector (uses mock mode by default)
+connector = NotionConnector()
+
+# List pages in a database
+pages = connector.list_pages(database_id="my_database")
+for p in pages:
+    print(f"{p.id}: {p.title}")
+
+# Get page content
+content = connector.get_page_content(page_id="page_id")
+
+# Stream training samples from database
+mapping = {"input": "Question", "output": "Answer"}
+for sample in connector.stream_samples("database_id", mapping):
+    print(sample)
+```
+
+### Configuration
+
+```python
+from connectors.notion_connector import NotionConfig
+
+config = NotionConfig(
+    # Authentication
+    api_token="secret_xxx...",  # Notion integration token
+
+    # Mock mode (default: True)
+    mock_mode=False,
+    samples_dir="./my_samples/",  # Custom mock samples directory
+
+    # Query settings
+    page_size=100,
+    include_children=True,
+    max_depth=3,
+)
+
+connector = NotionConnector(config)
+```
+
+### Mock Mode (Default)
+
+By default, the connector runs in mock mode (`NOTION_MOCK=true`). In this mode, it reads from local sample files in `examples/notion_samples/`.
+
+```bash
+# Enable mock mode (default)
+export NOTION_MOCK=true
+
+# Disable mock mode (use real Notion API)
+export NOTION_MOCK=false
+export NOTION_API_TOKEN="secret_xxx..."
+```
+
+### CLI Usage
+
+```bash
+# List pages in a database (mock mode)
+python connectors/notion_connector.py --list --database-id training_database
+
+# Get page content
+python connectors/notion_connector.py --page-id page-001 --content
+
+# Stream training samples
+python connectors/notion_connector.py --stream --database-id training_database \
+    --mapping '{"input": "Question", "output": "Answer"}'
+```
+
+### Setting Up Notion Integration (Real Mode)
+
+1. **Create a Notion Integration** at https://www.notion.so/my-integrations
+2. **Copy the integration token** (starts with `secret_`)
+3. **Share databases/pages** with your integration
+4. **Configure the connector**:
+
+```bash
+export NOTION_MOCK=false
+export NOTION_API_TOKEN="secret_xxx..."
+```
+
+```python
+config = NotionConfig(
+    mock_mode=False,
+    api_token="secret_xxx...",
+)
+connector = NotionConnector(config)
+```
+
+### Property Types Supported
+
+The connector extracts values from these Notion property types:
+
+| Property Type | Extraction |
+|--------------|------------|
+| title | Plain text |
+| rich_text | Plain text |
+| number | String conversion |
+| select | Selection name |
+| multi_select | Comma-separated names |
+| checkbox | "True"/"False" |
+| url | URL string |
+| email | Email string |
+| date | Start date |
+
+### Block Types Supported
+
+When extracting page content, these block types are parsed:
+
+- Paragraphs
+- Headings (H1, H2, H3) - prefixed with #, ##, ###
+- Bulleted lists - prefixed with -
+- Numbered lists - prefixed with 1.
+- Quotes - prefixed with >
+- Code blocks - wrapped in ```
+
+---
+
 ## Adding a New Connector
 
 To add a new connector, follow these patterns:
@@ -767,6 +1002,9 @@ Add a section to this file documenting the new connector.
 |----------|---------|-------------|
 | `DB_URL` | `sqlite:///:memory:` | Database connection URL |
 | `GOOGLE_OAUTH_DISABLED` | `true` | Enable mock mode for Google Docs |
+| `GOOGLE_DRIVE_MOCK` | `true` | Enable mock mode for Google Drive |
+| `NOTION_MOCK` | `true` | Enable mock mode for Notion |
+| `NOTION_API_TOKEN` | - | Notion integration token |
 | `CONNECTOR_MOCK` | `false` | Enable mock mode for all connectors |
 | `API_BASE_URL` | - | Default REST API base URL |
 | `API_AUTH_TOKEN` | - | Default bearer token for API |

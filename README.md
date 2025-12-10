@@ -79,6 +79,8 @@ foremforge serve --dir ./service --dry-run
 |--------|--------|-------|
 | SQLite / Postgres | ✔ (SQLite stub) | Streaming reader, batch mode |
 | Google Docs | ✔ (mock mode) | No OAuth needed in test environments |
+| Google Drive | ✔ | Files, folders, workspace exports |
+| Notion | ✔ | Pages, databases, properties |
 | File Ingesters | ✔ | PDF/DOCX/TXT/MD |
 | REST APIs | ✔ | Pagination, auth, rate limiting |
 
@@ -229,6 +231,8 @@ TinyForgeAI/
 │   ├── db_connector.py   # SQLite/Postgres
 │   ├── api_connector.py  # REST API connector
 │   ├── google_docs.py    # Google Docs integration
+│   ├── google_drive_connector.py  # Google Drive files
+│   ├── notion_connector.py  # Notion pages/databases
 │   └── indexer.py        # RAG document indexer
 ├── model_zoo/            # Pre-configured model registry
 │   ├── registry.py       # Model configurations (13 models)
@@ -406,6 +410,8 @@ Apache License 2.0 - see [LICENSE](LICENSE) for details.
 - [x] A/B testing for model comparisons
 - [x] Production-ready backend (rate limiting, webhooks, monitoring, exceptions)
 - [x] REST API connector with pagination and auth support
+- [x] Google Drive connector with workspace file exports
+- [x] Notion connector for pages and databases
 - [ ] Model versioning and registry
 
 ---

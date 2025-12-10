@@ -4,6 +4,8 @@ from connectors.api_connector import APIConnector, APIConnectorConfig, Paginatio
 from connectors.db_connector import DBConnector
 from connectors.file_ingest import ingest_file, get_supported_formats
 from connectors.google_docs_connector import fetch_doc_text, list_docs_in_folder
+from connectors.google_drive_connector import GoogleDriveConnector, GoogleDriveConfig, DriveFile
+from connectors.notion_connector import NotionConnector, NotionConfig, NotionPage, NotionDatabase
 
 # Async connectors - import conditionally to avoid import errors if dependencies missing
 try:
@@ -26,6 +28,15 @@ __all__ = [
     "get_supported_formats",
     "fetch_doc_text",
     "list_docs_in_folder",
+    # Google Drive
+    "GoogleDriveConnector",
+    "GoogleDriveConfig",
+    "DriveFile",
+    # Notion
+    "NotionConnector",
+    "NotionConfig",
+    "NotionPage",
+    "NotionDatabase",
     # Async connectors
     "AsyncAPIConnector",
     "AsyncDBConnector",

@@ -1,0 +1,14 @@
+[
+  {
+    "question": "What is TinyForgeAI?",
+    "answer": "TinyForgeAI is an open-source framework for training, fine-tuning, and deploying small language models."
+  },
+  {
+    "question": "How do I install TinyForgeAI?",
+    "answer": "You can install TinyForgeAI using pip: pip install tinyforgeai, or clone the repository and run pip install -e ."
+  },
+  {
+    "question": "What models does TinyForgeAI support?",
+    "answer": "TinyForgeAI supports various transformer models including GPT-2, DistilGPT-2, and other HuggingFace models suitable for fine-tuning."
+  }
+]
