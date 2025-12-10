@@ -20,9 +20,9 @@ The Data Connector Layer provides a unified interface for ingesting training dat
 | SQL Databases | `DBConnector` | Implemented | N/A (use SQLite) |
 | Google Docs | `google_docs_connector` | Implemented | `GOOGLE_OAUTH_DISABLED=true` |
 | Local Files | `file_ingest` | Implemented | N/A |
+| REST APIs | `APIConnector` | Implemented | `API_MOCK=true` |
 | Google Drive | Planned | - | - |
 | Notion | Planned | - | - |
-| REST APIs | Planned | - | - |
 
 ### Architecture
 
@@ -417,6 +417,237 @@ Sample files for testing are available in `examples/files/`:
 - `sample.docx` - Word document sample (if python-docx installed)
 - `sample.pdf` - PDF document sample (if PDF library installed)
 
+## REST API Connector
+
+The REST API connector fetches and transforms data from external REST APIs into training samples. It supports pagination, authentication, rate limiting, caching, and retry logic.
+
+### Quick Start
+
+```python
+from connectors.api_connector import APIConnector, APIConnectorConfig
+
+# Create connector with configuration
+config = APIConnectorConfig(
+    base_url="https://api.example.com",
+    auth_type="bearer",
+    auth_token="your-api-token",
+)
+
+connector = APIConnector(config)
+
+# Fetch a single endpoint
+data = connector.fetch("/users/1")
+
+# Stream training samples with field mapping
+mapping = {"input": "question", "output": "answer"}
+for sample in connector.stream_samples("/faq", mapping):
+    print(sample)
+```
+
+### Configuration
+
+```python
+from connectors.api_connector import APIConnectorConfig
+
+config = APIConnectorConfig(
+    # Base URL for all requests
+    base_url="https://api.example.com",
+
+    # Authentication (none, basic, bearer, api_key)
+    auth_type="bearer",
+    auth_token="your-token",
+
+    # Or for API key authentication
+    # auth_type="api_key",
+    # api_key_header="X-API-Key",
+    # api_key="your-key",
+
+    # Rate limiting (requests per minute)
+    rate_limit=60,
+
+    # Retry configuration
+    retry_attempts=3,
+    retry_delay=1.0,  # seconds
+
+    # Request timeout
+    timeout=30,
+
+    # Response caching
+    cache_enabled=True,
+    cache_ttl=300,  # seconds
+)
+```
+
+### Pagination Support
+
+The connector supports multiple pagination strategies:
+
+```python
+from connectors.api_connector import PaginationConfig, PaginationType
+
+# Offset-based pagination
+pagination = PaginationConfig(
+    type=PaginationType.OFFSET,
+    page_param="offset",
+    limit_param="limit",
+    limit=100,
+)
+
+# Page number pagination
+pagination = PaginationConfig(
+    type=PaginationType.PAGE,
+    page_param="page",
+    limit_param="per_page",
+    limit=50,
+)
+
+# Cursor-based pagination
+pagination = PaginationConfig(
+    type=PaginationType.CURSOR,
+    cursor_param="cursor",
+    cursor_path="meta.next_cursor",
+)
+
+# Link header pagination (RFC 5988)
+pagination = PaginationConfig(
+    type=PaginationType.LINK_HEADER,
+)
+
+# Stream with pagination
+for sample in connector.stream_paginated("/items", mapping, pagination):
+    print(sample)
+```
+
+### Authentication Types
+
+```python
+# No authentication
+config = APIConnectorConfig(base_url="https://api.example.com")
+
+# Bearer token
+config = APIConnectorConfig(
+    base_url="https://api.example.com",
+    auth_type="bearer",
+    auth_token="your-jwt-token",
+)
+
+# Basic auth
+config = APIConnectorConfig(
+    base_url="https://api.example.com",
+    auth_type="basic",
+    auth_username="user",
+    auth_password="pass",
+)
+
+# API key in header
+config = APIConnectorConfig(
+    base_url="https://api.example.com",
+    auth_type="api_key",
+    api_key_header="X-API-Key",
+    api_key="your-api-key",
+)
+```
+
+### Field Mapping
+
+Map API response fields to training sample format:
+
+```python
+# Simple mapping
+mapping = {"input": "question", "output": "answer"}
+
+# Nested field access with dot notation
+mapping = {"input": "data.title", "output": "data.content"}
+
+# Transform to standard format
+sample = connector.fetch_as_sample("/item/1", mapping)
+# Returns: {"input": "...", "output": "...", "metadata": {...}}
+```
+
+### CLI Usage
+
+```bash
+# Fetch and display as JSON
+python -m connectors.api_connector \
+    --base-url "https://api.example.com" \
+    --endpoint "/items" \
+    --mapping '{"input": "title", "output": "body"}'
+
+# With authentication
+python -m connectors.api_connector \
+    --base-url "https://api.example.com" \
+    --endpoint "/items" \
+    --auth-type bearer \
+    --auth-token "your-token" \
+    --mapping '{"input": "title", "output": "body"}'
+
+# With pagination
+python -m connectors.api_connector \
+    --base-url "https://api.example.com" \
+    --endpoint "/items" \
+    --paginate \
+    --limit 100 \
+    --mapping '{"input": "title", "output": "body"}'
+```
+
+### Error Handling
+
+```python
+from connectors.api_connector import (
+    APIConnector,
+    APIConnectorError,
+    RateLimitError,
+    AuthenticationError,
+)
+
+connector = APIConnector(config)
+
+try:
+    data = connector.fetch("/endpoint")
+except RateLimitError as e:
+    print(f"Rate limited. Retry after {e.retry_after} seconds")
+except AuthenticationError as e:
+    print(f"Auth failed: {e}")
+except APIConnectorError as e:
+    print(f"API error: {e.status_code} - {e.message}")
+```
+
+### Caching
+
+```python
+config = APIConnectorConfig(
+    base_url="https://api.example.com",
+    cache_enabled=True,
+    cache_ttl=300,  # Cache responses for 5 minutes
+)
+
+connector = APIConnector(config)
+
+# First call fetches from API
+data = connector.fetch("/expensive-endpoint")
+
+# Second call returns cached response
+data = connector.fetch("/expensive-endpoint")
+
+# Force refresh
+data = connector.fetch("/expensive-endpoint", force_refresh=True)
+
+# Clear all cache
+connector.clear_cache()
+```
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `API_BASE_URL` | - | Default base URL |
+| `API_AUTH_TOKEN` | - | Default bearer token |
+| `API_RATE_LIMIT` | `60` | Requests per minute |
+| `API_TIMEOUT` | `30` | Request timeout in seconds |
+| `API_MOCK` | `false` | Enable mock mode for testing |
+
+---
+
 ## Adding a New Connector
 
 To add a new connector, follow these patterns:
@@ -537,6 +768,11 @@ Add a section to this file documenting the new connector.
 | `DB_URL` | `sqlite:///:memory:` | Database connection URL |
 | `GOOGLE_OAUTH_DISABLED` | `true` | Enable mock mode for Google Docs |
 | `CONNECTOR_MOCK` | `false` | Enable mock mode for all connectors |
+| `API_BASE_URL` | - | Default REST API base URL |
+| `API_AUTH_TOKEN` | - | Default bearer token for API |
+| `API_RATE_LIMIT` | `60` | API requests per minute |
+| `API_TIMEOUT` | `30` | API request timeout in seconds |
+| `API_MOCK` | `false` | Enable mock mode for API connector |
 
 ## Troubleshooting
 

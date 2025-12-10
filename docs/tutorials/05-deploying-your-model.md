@@ -406,7 +406,39 @@ print(f"Speedup: {pytorch_time/onnx_time:.1f}x")
 
 ## Monitoring and Scaling
 
-### Adding Metrics
+### Built-in Monitoring
+
+TinyForgeAI includes built-in Prometheus metrics integration:
+
+```python
+# Using TinyForgeAI's monitoring module
+from backend.monitoring import MetricsRegistry, get_metrics_registry
+
+# Get the shared metrics registry
+registry = get_metrics_registry()
+
+# Create custom metrics
+request_counter = registry.counter(
+    "requests_total",
+    "Total requests",
+    labels=["endpoint", "method"]
+)
+latency_histogram = registry.histogram(
+    "request_duration_seconds",
+    "Request latency in seconds"
+)
+
+# Use in your endpoints
+@app.post("/predict")
+async def predict(request: dict):
+    request_counter.labels(endpoint="predict", method="POST").inc()
+
+    with latency_histogram.time():
+        result = model.predict(request["input"])
+        return {"output": result}
+```
+
+### Adding Custom Metrics
 
 ```python
 # examples/deployment/monitored_server.py
@@ -440,6 +472,30 @@ async def predict(request: dict):
 async def metrics():
     return Response(generate_latest(), media_type="text/plain")
 ```
+
+### Rate Limiting
+
+TinyForgeAI includes built-in rate limiting for production deployments:
+
+```python
+from services.dashboard_api.rate_limit import rate_limit, RateLimiter
+
+# Decorator-based rate limiting
+@app.post("/predict")
+@rate_limit(requests=60, window=60)  # 60 requests per minute
+async def predict(request: Request, data: dict):
+    return {"output": model.predict(data["input"])}
+
+# For distributed deployments, use Redis
+import os
+os.environ["TINYFORGE_REDIS_URL"] = "redis://localhost:6379/0"
+```
+
+Rate limit responses include standard headers:
+- `X-RateLimit-Limit`: Maximum requests allowed
+- `X-RateLimit-Remaining`: Requests remaining in window
+- `X-RateLimit-Reset`: Unix timestamp when window resets
+- `Retry-After`: Seconds to wait (when rate limited)
 
 ### Load Balancing with NGINX
 
@@ -537,12 +593,20 @@ INFRASTRUCTURE:
 □ Load balancer set up
 □ Health checks configured
 
+RATE LIMITING & SECURITY:
+□ Rate limiting configured (TINYFORGE_RATE_LIMIT_ENABLED=true)
+□ Redis configured for distributed rate limiting
+□ Auth endpoints have stricter limits
+□ CORS settings configured
+□ Input validation enabled
+
 MONITORING:
 □ Logging configured
-□ Metrics collection set up
+□ Prometheus metrics enabled (backend.monitoring)
+□ Grafana dashboards created
 □ Alerts configured
-□ Dashboard created
-□ Error tracking enabled
+□ Error tracking enabled (backend.exceptions)
+□ Webhook notifications set up (backend.webhooks)
 
 POST-DEPLOYMENT:
 □ Smoke tests passed

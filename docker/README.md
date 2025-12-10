@@ -48,6 +48,61 @@ docker run -p 8000:8000 \
   tinyforge-inference:local
 ```
 
+## Development Environment
+
+For development, TinyForgeAI provides a complete stack with PostgreSQL, Redis, monitoring, and additional tools.
+
+### Start Development Stack
+
+```bash
+# From repository root
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+
+# With optional tools (pgAdmin)
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml --profile tools up -d
+
+# With monitoring stack (Prometheus + Grafana)
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml --profile monitoring up -d
+
+# Everything
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml --profile tools --profile monitoring up -d
+```
+
+### Development Services
+
+| Service | URL | Credentials |
+|---------|-----|-------------|
+| API | http://localhost:8000 | - |
+| Dashboard | http://localhost:3000 | - |
+| PostgreSQL | localhost:5432 | `tinyforge` / `tinyforge` |
+| Redis | localhost:6379 | - |
+| pgAdmin | http://localhost:5050 | `admin@tinyforge.local` / `admin` |
+| Prometheus | http://localhost:9090 | - |
+| Grafana | http://localhost:3001 | `admin` / `admin` |
+
+### Stop Development Stack
+
+```bash
+# Stop all services
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml down
+
+# Stop and remove volumes (clean slate)
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml down -v
+```
+
+### Development Environment Variables
+
+The development stack configures these environment variables automatically:
+
+| Variable | Value | Description |
+|----------|-------|-------------|
+| `TINYFORGE_DEBUG` | `true` | Enable debug mode |
+| `TINYFORGE_DB_URL` | `postgresql://tinyforge:tinyforge@postgres:5432/tinyforge` | PostgreSQL connection |
+| `TINYFORGE_REDIS_URL` | `redis://redis:6379/0` | Redis connection for rate limiting |
+| `LOG_LEVEL` | `DEBUG` | Verbose logging |
+
+---
+
 ## Model Registry
 
 The inference server expects model files in the `/app/model_registry` directory inside the container.

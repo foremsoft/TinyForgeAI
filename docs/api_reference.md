@@ -431,11 +431,76 @@ curl http://localhost:8000/metrics
 
 ## Rate Limiting
 
-Default TinyForgeAI services do not implement rate limiting. For production deployments, consider:
+TinyForgeAI includes built-in rate limiting for the Dashboard API with support for both in-memory and Redis-based storage.
+
+### Rate Limit Headers
+
+All API responses include rate limit headers:
+
+| Header | Description |
+|--------|-------------|
+| `X-RateLimit-Limit` | Maximum requests allowed in window |
+| `X-RateLimit-Remaining` | Remaining requests in current window |
+| `X-RateLimit-Reset` | Unix timestamp when window resets |
+
+### Rate Limit Response
+
+When rate limited, the API returns:
+
+```http
+HTTP/1.1 429 Too Many Requests
+X-RateLimit-Limit: 60
+X-RateLimit-Remaining: 0
+X-RateLimit-Reset: 1702234567
+Retry-After: 30
+
+{
+  "detail": {
+    "error": "Rate limit exceeded",
+    "limit": 60,
+    "remaining": 0,
+    "retry_after": 30.5
+  }
+}
+```
+
+### Default Limits
+
+| Category | Requests | Window | Description |
+|----------|----------|--------|-------------|
+| `api` | 60 | 1 minute | General API endpoints |
+| `auth` | 10 | 1 minute | Authentication endpoints |
+| `inference` | 30 | 1 minute | Prediction endpoints |
+| `hourly` | 1000 | 1 hour | Hourly global limit |
+
+### Configuration
+
+Rate limiting can be configured via environment variables:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `TINYFORGE_RATE_LIMIT_ENABLED` | `true` | Enable/disable rate limiting |
+| `TINYFORGE_RATE_LIMIT_RPM` | `60` | Default requests per minute |
+| `TINYFORGE_RATE_LIMIT_RPH` | `1000` | Default requests per hour |
+| `TINYFORGE_REDIS_URL` | - | Redis URL for distributed rate limiting |
+
+### Redis-Based Rate Limiting
+
+For distributed deployments, configure Redis:
+
+```bash
+export TINYFORGE_REDIS_URL=redis://localhost:6379/0
+```
+
+This enables consistent rate limiting across multiple API instances.
+
+### Alternative Options
+
+For additional protection, consider:
 
 1. **Reverse Proxy**: Configure rate limiting in nginx/Traefik
 2. **API Gateway**: Use AWS API Gateway, Kong, or similar
-3. **Application Level**: Add FastAPI middleware
+3. **CDN**: Use Cloudflare or similar for edge rate limiting
 
 ---
 

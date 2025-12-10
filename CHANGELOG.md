@@ -7,8 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-- Nothing yet
+### Added - Production-Ready Backend
+- **Rate Limiting**: Configurable sliding window rate limiter with in-memory and Redis-based storage
+  - Decorator and middleware support for FastAPI
+  - Category-based limits (api, auth, inference, hourly)
+  - Standard rate limit headers (X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset)
+- **Exception Handling**: Structured exception hierarchy with error codes
+  - `TinyForgeError` base class with error codes and details
+  - Specialized exceptions: `TrainingError`, `ValidationError`, `ConnectorError`, etc.
+- **Webhook System**: Event-driven notifications for job lifecycle
+  - Support for job started, completed, failed events
+  - Configurable webhook endpoints with retry logic
+- **Prometheus Metrics**: Integration for observability
+  - Request counters, histograms, and gauges
+  - Custom metrics registry with namespace support
+
+### Added - REST API Connector
+- **APIConnector**: Full-featured connector for consuming REST APIs
+  - Multiple authentication types (Bearer, Basic, API Key)
+  - Pagination support (offset, page, cursor, link header)
+  - Built-in rate limiting and retry logic
+  - Response caching with configurable TTL
+  - Field mapping for training sample format
+
+### Added - Development Environment
+- **Docker Compose Dev Stack**: Complete development environment
+  - PostgreSQL 15 database
+  - Redis 7 cache for distributed rate limiting
+  - pgAdmin for database management
+  - Prometheus for metrics collection
+  - Grafana for metrics visualization
+
+### Added - A/B Testing Framework
+- Model comparison experiments
+- Automatic traffic splitting
+- Statistical significance testing
+
+### Changed
+- Updated CI/CD pipeline with new module import tests
+- Expanded test suite to 460+ tests
 
 ---
 
