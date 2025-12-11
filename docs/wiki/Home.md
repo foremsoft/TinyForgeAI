@@ -13,7 +13,7 @@ Welcome to the TinyForgeAI Wiki! This is your central resource for learning how 
 | [MCP Integration](#mcp-integration) | Use with AI assistants (Claude, ChatGPT) |
 | [Training UIs](Training-UIs) | Graphical interfaces for training |
 | [Beginner's Course](Beginners-Course) | Learn AI from scratch (4 hours) |
-| [Hands-On Tutorials](Hands-On-Tutorials) | Build real projects (90 min) |
+| [Hands-On Tutorials](Hands-On-Tutorials) | Build real projects (130 min) |
 | [Connectors](Connectors) | Connect to data sources |
 | [Deployment](Deployment) | Deploy to production |
 
@@ -101,7 +101,8 @@ foremforge playground --model ./my_model --export demo.html  # Offline HTML
 - ~4 hours to complete
 
 ### Enhanced Tutorials
-- Hands-on tutorials: Build real projects in 90 minutes
+- Hands-on tutorials: Build real projects in 130 minutes
+- 7 tutorials: Quick Start, FAQ Bot, Document Search, Train Model, Deploy, MCP Integration, Killer Features
 - Sample datasets included for practice
 
 ### New Connectors

@@ -487,7 +487,7 @@ Each deployment includes managed Kubernetes, container registry, object storage,
 | [05-07](docs/tutorials/beginners-course/05-what-is-a-model.md) | Models & Training | Train your own AI model |
 | [08-10](docs/tutorials/beginners-course/08-test-and-improve.md) | Test, Deploy, Next Steps | Improve, deploy, advanced topics |
 
-**Hands-On Tutorials (90 min)** - Build real projects:
+**Hands-On Tutorials (130 min)** - Build real projects:
 | Tutorial | Time | What You Build |
 |----------|------|----------------|
 | [Quick Start](docs/tutorials/hands-on/00-quickstart.md) | 5 min | Install & first script |
@@ -495,6 +495,8 @@ Each deployment includes managed Kubernetes, container registry, object storage,
 | [Document Search](docs/tutorials/hands-on/02-document-search.md) | 20 min | Search PDFs & docs |
 | [Train Model](docs/tutorials/hands-on/03-train-your-model.md) | 30 min | Custom AI model |
 | [Deploy](docs/tutorials/hands-on/04-deploy-your-project.md) | 20 min | Put it online |
+| [MCP Integration](docs/tutorials/hands-on/05-mcp-integration.md) | 15 min | AI assistant control |
+| [Killer Features](docs/tutorials/hands-on/06-killer-features.md) | 25 min | URL training, augmentation, playground |
 
 **Concept Tutorials:**
 | Tutorial | Description |
