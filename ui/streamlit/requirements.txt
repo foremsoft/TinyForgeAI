@@ -1,0 +1,6 @@
+# TinyForgeAI Streamlit Training Interface Dependencies
+streamlit>=1.28.0
+plotly>=5.18.0
+torch>=2.0.0
+transformers>=4.30.0
+pandas>=2.0.0

@@ -227,6 +227,36 @@ export function createWebSocket(channel = 'jobs') {
 }
 
 // ============================================
+// File Upload
+// ============================================
+
+export async function uploadTrainingData(file) {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const url = `${API_BASE_URL}/api/upload/training-data`;
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: response.statusText }));
+      throw new Error(error.detail || `HTTP ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    if (error.message === 'Failed to fetch') {
+      throw new Error('Unable to connect to API. Is the server running?');
+    }
+    throw error;
+  }
+}
+
+// ============================================
 // API Status Check
 // ============================================
 
@@ -270,4 +300,5 @@ export default {
   getLogs,
   createWebSocket,
   checkApiStatus,
+  uploadTrainingData,
 };
