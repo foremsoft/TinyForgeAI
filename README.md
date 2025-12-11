@@ -50,9 +50,31 @@ TinyForgeAI gives you **your own small, focused language model** trained only on
 
 ### Web Dashboard
 - React-based dashboard UI for training management
+- **Easy Mode**: Step-by-step wizard for non-technical users
+- **Advanced Mode**: Full control for power users
 - Real-time job monitoring and logs
 - Model browsing and playground for inference testing
 - Service health monitoring
+
+### Training UIs for Everyone
+Three training interfaces designed for different users:
+
+| Interface | Best For | Features |
+|-----------|----------|----------|
+| **Gradio** | Demos, beginners | Instant shareable links, drag-and-drop |
+| **Streamlit** | Data scientists | Rich visualizations, batch testing |
+| **React Dashboard** | Production | Easy/Advanced modes, job management |
+
+```bash
+# Gradio (simplest)
+cd ui/gradio && pip install -r requirements.txt && python training_app.py
+
+# Streamlit (data exploration)
+cd ui/streamlit && pip install -r requirements.txt && streamlit run training_app.py
+
+# React Dashboard (production)
+cd dashboard && npm install && npm run dev
+```
 
 ### Auto-Generate Microservice
 - Export to ONNX for optimized inference
@@ -252,8 +274,13 @@ TinyForgeAI/
 │   ├── dashboard_api/    # Dashboard REST API
 │   │   └── rate_limit.py # Rate limiting middleware
 │   └── training_worker/  # Async training job worker
+├── ui/                   # Training User Interfaces
+│   ├── gradio/           # Gradio interface (demos/beginners)
+│   └── streamlit/        # Streamlit interface (data scientists)
 ├── dashboard/            # React web dashboard
-│   └── src/pages/        # Train, Models, Logs, Playground
+│   └── src/
+│       ├── components/   # TrainingWizard (Easy Mode)
+│       └── pages/        # Train, Models, Logs, Playground
 ├── inference_server/     # Inference service template
 ├── cli/                  # CLI tool (foremforge)
 ├── deploy/               # Deployment configurations
@@ -264,9 +291,12 @@ TinyForgeAI/
 │   └── azure/            # Azure Terraform
 ├── examples/             # Sample code
 │   ├── training/         # Training examples
-│   └── rag/              # RAG examples
+│   ├── rag/              # RAG examples
+│   └── tutorial_data/    # Sample datasets for tutorials
 ├── docs/                 # Documentation
-│   └── tutorials/        # Step-by-step tutorials
+│   └── tutorials/
+│       ├── hands-on/     # Practical tutorials (90 min)
+│       └── beginners-course/  # Complete AI course (4 hours)
 ├── tests/                # Test suite (456+ tests)
 ├── docker/               # Docker configurations
 └── .github/workflows/    # CI/CD pipelines
@@ -369,6 +399,25 @@ Each deployment includes managed Kubernetes, container registry, object storage,
 
 ### Tutorials (Start Here!)
 
+**Beginner's Course (4 hours)** - Learn AI from scratch:
+| Module | Topic | Description |
+|--------|-------|-------------|
+| [00](docs/tutorials/beginners-course/00-what-is-ai.md) | What is AI? | AI concepts explained (no code) |
+| [01-02](docs/tutorials/beginners-course/01-setup-your-computer.md) | Setup & First Script | Environment setup, first AI code |
+| [03-04](docs/tutorials/beginners-course/03-understanding-data.md) | Data & Simple Bot | Data formats, build a chatbot |
+| [05-07](docs/tutorials/beginners-course/05-what-is-a-model.md) | Models & Training | Train your own AI model |
+| [08-10](docs/tutorials/beginners-course/08-test-and-improve.md) | Test, Deploy, Next Steps | Improve, deploy, advanced topics |
+
+**Hands-On Tutorials (90 min)** - Build real projects:
+| Tutorial | Time | What You Build |
+|----------|------|----------------|
+| [Quick Start](docs/tutorials/hands-on/00-quickstart.md) | 5 min | Install & first script |
+| [FAQ Bot](docs/tutorials/hands-on/01-faq-bot.md) | 15 min | Working chatbot |
+| [Document Search](docs/tutorials/hands-on/02-document-search.md) | 20 min | Search PDFs & docs |
+| [Train Model](docs/tutorials/hands-on/03-train-your-model.md) | 30 min | Custom AI model |
+| [Deploy](docs/tutorials/hands-on/04-deploy-your-project.md) | 20 min | Put it online |
+
+**Concept Tutorials:**
 | Tutorial | Description |
 |----------|-------------|
 | [01 - Introduction to AI Training](docs/tutorials/01-introduction-to-ai-training.md) | Beginner-friendly intro to AI concepts |
@@ -384,12 +433,14 @@ Each deployment includes managed Kubernetes, container registry, object storage,
 - [Training Guide](docs/training.md) - Training details
 - [Connectors Guide](docs/connectors.md) - Data source integrations
 - [Use Cases Guide](docs/use_cases.md) - Practical use cases with examples
+- [Training UIs Guide](ui/README.md) - Gradio, Streamlit, React interfaces
 - [Docker Guide](docker/README.md) - Container deployment
 
 ### Examples
 
 - [Training Quick Start](examples/training/quick_start.py) - Train a model in minutes
 - [RAG Quick Start](examples/rag/quick_start_rag.py) - Index and search documents
+- [Tutorial Data](examples/tutorial_data/) - Sample datasets for learning
 
 ## Community & Support
 
@@ -430,6 +481,9 @@ Apache License 2.0 - see [LICENSE](LICENSE) for details.
 - [x] Google Drive connector with workspace file exports
 - [x] Notion connector for pages and databases
 - [x] Model versioning and registry
+- [x] **Training UIs** for non-technical users (Gradio, Streamlit, React Easy Mode)
+- [x] **Beginner's AI Course** (11 modules, learn AI from scratch)
+- [x] **Hands-On Tutorials** (build real projects in 90 minutes)
 
 ---
 

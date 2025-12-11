@@ -68,6 +68,20 @@ pip install -e .
 
 ---
 
+## Prefer a Graphical Interface?
+
+If you prefer clicking buttons instead of typing commands, use our **Training UIs**:
+
+| Interface | Best For | How to Run |
+|-----------|----------|------------|
+| **Gradio** | Visual learners, demos | `cd ui/gradio && python training_app.py` |
+| **Streamlit** | Data exploration | `cd ui/streamlit && streamlit run training_app.py` |
+| **React Dashboard** | Full experience | `cd dashboard && npm run dev` |
+
+The React Dashboard has an **Easy Mode** with a step-by-step wizard!
+
+---
+
 ## Course Features
 
 ### 📖 Detailed Explanations

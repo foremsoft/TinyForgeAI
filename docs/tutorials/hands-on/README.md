@@ -98,6 +98,20 @@ docs/tutorials/hands-on/
 
 ---
 
+## Training UIs Available
+
+Don't want to use the command line? We have graphical interfaces for training:
+
+| Interface | Best For | How to Run |
+|-----------|----------|------------|
+| **Gradio** | Demos, beginners | `cd ui/gradio && python training_app.py` |
+| **Streamlit** | Data exploration | `cd ui/streamlit && streamlit run training_app.py` |
+| **React Dashboard** | Production | `cd dashboard && npm run dev` |
+
+See the [Training UIs Guide](../../../ui/README.md) for details.
+
+---
+
 ## Getting Help
 
 Stuck? Here's how to get help:
