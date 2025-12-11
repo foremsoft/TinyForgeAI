@@ -6,6 +6,8 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Release](https://img.shields.io/badge/release-v0.1.0-green.svg)](https://github.com/foremsoft/TinyForgeAI/releases)
+[![Contributions Welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![Good First Issues](https://img.shields.io/github/issues/foremsoft/TinyForgeAI/good%20first%20issue?color=7057ff&label=good%20first%20issues)](https://github.com/foremsoft/TinyForgeAI/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
 
 **Tiny language models — trained from your data — deployed as microservices in seconds.**
 
@@ -120,6 +122,38 @@ Each connector outputs:
 ```json
 {"input": "...", "output": "...", "metadata": {...}}
 ```
+
+### MCP Integration (Model Context Protocol)
+
+TinyForgeAI includes an MCP server that enables AI assistants (Claude, ChatGPT, Gemini) to interact with your training pipeline directly.
+
+```bash
+# Install MCP support
+pip install mcp
+
+# Run MCP server
+python -m mcp.server
+```
+
+**With Claude Desktop**, add to config:
+```json
+{
+    "mcpServers": {
+        "tinyforge": {
+            "command": "python",
+            "args": ["-m", "mcp.server"],
+            "cwd": "/path/to/TinyForgeAI"
+        }
+    }
+}
+```
+
+Then ask Claude:
+- "List available models in TinyForgeAI"
+- "Train a Q&A model on my FAQ data"
+- "Search my indexed documents for authentication"
+
+See [MCP Documentation](mcp/README.md) for full details.
 
 ### E2E Demo Included
 
@@ -283,6 +317,10 @@ TinyForgeAI/
 │       └── pages/        # Train, Models, Logs, Playground
 ├── inference_server/     # Inference service template
 ├── cli/                  # CLI tool (foremforge)
+├── mcp/                  # MCP server for AI assistant integration
+│   ├── server.py         # Main MCP server
+│   ├── tools/            # Training, inference, connector tools
+│   └── resources/        # Model registry, job status resources
 ├── deploy/               # Deployment configurations
 │   ├── k8s/              # Kubernetes manifests
 │   ├── helm-chart/       # Helm chart for production
@@ -429,6 +467,7 @@ Each deployment includes managed Kubernetes, container registry, object storage,
 ### Reference Guides
 
 - [Architecture Guide](docs/ARCHITECTURE.md) - System design and components
+- [MCP Integration Guide](docs/mcp.md) - AI assistant integration via Model Context Protocol
 - [Contributing Guide](docs/CONTRIBUTING.md) - How to contribute
 - [Training Guide](docs/training.md) - Training details
 - [Connectors Guide](docs/connectors.md) - Data source integrations
@@ -450,7 +489,17 @@ Each deployment includes managed Kubernetes, container registry, object storage,
 
 ## Contributing
 
-We welcome contributions! Please see [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) for guidelines.
+We welcome contributions from developers of all skill levels! Whether you're fixing a typo, adding a feature, or improving documentation, your help is appreciated.
+
+[![Contributions Welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![Good First Issues](https://img.shields.io/github/issues/foremsoft/TinyForgeAI/good%20first%20issue?color=7057ff&label=good%20first%20issues)](https://github.com/foremsoft/TinyForgeAI/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
+
+**Ways to contribute:**
+- Report bugs and suggest features via [Issues](https://github.com/foremsoft/TinyForgeAI/issues)
+- Pick up a [good first issue](https://github.com/foremsoft/TinyForgeAI/labels/good%20first%20issue) to get started
+- Improve documentation or add tutorials
+- Add new connectors or enhance existing ones
+- Help review pull requests
 
 **Quick start for contributors:**
 ```bash
@@ -459,6 +508,8 @@ cd TinyForgeAI
 pip install -e ".[all]"
 pytest  # Run tests
 ```
+
+See our [Contributing Guide](docs/CONTRIBUTING.md) for detailed instructions and our [Contributors](CONTRIBUTORS.md) to see who's helping build TinyForgeAI.
 
 ## License
 

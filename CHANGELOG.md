@@ -5,6 +5,48 @@ All notable changes to TinyForgeAI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2025-12-11
+
+### Added - MCP Integration (Model Context Protocol)
+- **MCP Server**: Full Model Context Protocol server for AI assistant integration
+  - Works with Claude Desktop, ChatGPT, Gemini, and other MCP-compatible assistants
+  - Stdio transport for local execution
+  - Comprehensive error handling and logging
+
+- **MCP Tools**: 13 tools for AI-powered control
+  - `train_model` - Submit training jobs with configurable parameters
+  - `get_training_status` - Monitor job progress and metrics
+  - `list_training_jobs` - List all jobs with filtering
+  - `cancel_training` - Cancel running jobs
+  - `run_inference` - Single model predictions
+  - `batch_inference` - Batch predictions on multiple inputs
+  - `fetch_data` - Fetch from any connector (DB, API, Notion, Slack, etc.)
+  - `ingest_files` - Convert documents to training format
+  - `index_documents` - Index for RAG search
+  - `search_documents` - Semantic document search
+  - `list_models` - Browse Model Zoo
+  - `get_model_info` - Get detailed model information
+  - `export_model` - Export to ONNX format
+
+- **MCP Resources**: Read-only data access for AI assistants
+  - `tinyforge://models/registry` - Complete model registry
+  - `tinyforge://jobs/active` - Active training jobs
+  - `tinyforge://connectors/available` - Available data connectors
+  - `tinyforge://docs/quickstart` - Quick start documentation
+
+### Added - Documentation
+- New `docs/mcp.md` - Comprehensive MCP integration guide
+- New `mcp/README.md` - MCP server documentation
+- New hands-on tutorial: `05-mcp-integration.md`
+- Updated Architecture guide with MCP section
+- Updated Wiki with MCP quick setup
+- Updated Connectors guide with MCP integration info
+
+### Changed
+- Updated README with MCP section and badges
+- Updated project structure to include `mcp/` directory
+- Renumbered ARCHITECTURE.md sections for MCP addition
+
 ## [0.3.0] - 2025-12-10
 
 ### Added - Production-Ready Backend

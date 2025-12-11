@@ -9,6 +9,7 @@ Welcome to the TinyForgeAI Wiki! This is your central resource for learning how 
 | Resource | Description |
 |----------|-------------|
 | [Getting Started](#getting-started) | Installation and first steps |
+| [MCP Integration](#mcp-integration) | Use with AI assistants (Claude, ChatGPT) |
 | [Training UIs](Training-UIs) | Graphical interfaces for training |
 | [Beginner's Course](Beginners-Course) | Learn AI from scratch (4 hours) |
 | [Hands-On Tutorials](Hands-On-Tutorials) | Build real projects (90 min) |
@@ -57,6 +58,11 @@ Prefer a graphical interface? Choose one:
 
 ## What's New (December 2025)
 
+### MCP Integration (Model Context Protocol)
+- **AI Assistant Integration**: Use TinyForgeAI directly from Claude, ChatGPT, or Gemini
+- **Natural Language Training**: "Train a Q&A model on my FAQ data"
+- **Voice-activated Workflows**: Control training, inference, and data fetching conversationally
+
 ### Training UIs for Everyone
 - **Gradio Interface**: Simple drag-and-drop training with shareable links
 - **Streamlit Interface**: Rich data exploration and visualization
@@ -102,6 +108,43 @@ Prefer a graphical interface? Choose one:
 │                                                                         │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
+
+---
+
+## MCP Integration
+
+TinyForgeAI includes a Model Context Protocol (MCP) server that lets AI assistants interact with your training pipeline.
+
+### Quick Setup
+
+```bash
+# Install MCP SDK
+pip install mcp
+```
+
+Add to Claude Desktop config (`~/Library/Application Support/Claude/claude_desktop_config.json`):
+
+```json
+{
+    "mcpServers": {
+        "tinyforge": {
+            "command": "python",
+            "args": ["-m", "mcp.server"],
+            "cwd": "/path/to/TinyForgeAI"
+        }
+    }
+}
+```
+
+### Example Commands
+
+Once configured, ask Claude:
+- "List available models in TinyForgeAI"
+- "Train a sentiment model on ./data/reviews.jsonl"
+- "Search my documents for password reset"
+- "What's the status of my training job?"
+
+See [MCP Documentation](../mcp.md) for full details.
 
 ---
 

@@ -25,8 +25,9 @@ Follow these tutorials in order for the best learning experience:
 | 2 | [Document Search](02-document-search.md) | 20 min | Search through PDFs, Word docs & more |
 | 3 | [Train Your Model](03-train-your-model.md) | 30 min | Train a custom AI model |
 | 4 | [Deploy Your Project](04-deploy-your-project.md) | 20 min | Put your AI online for others to use |
+| 5 | [MCP Integration](05-mcp-integration.md) | 15 min | Use AI assistants to control TinyForgeAI |
 
-**Total time:** About 90 minutes to complete all tutorials.
+**Total time:** About 105 minutes to complete all tutorials.
 
 ---
 
@@ -51,6 +52,11 @@ Follow these tutorials in order for the best learning experience:
 - Package your application
 - Deploy to the cloud
 - Create a web interface
+
+### By the End of Tutorial 5 (MCP Integration):
+- Connect TinyForgeAI to Claude Desktop
+- Train models using natural language
+- Search documents with AI assistance
 
 ---
 
@@ -93,7 +99,8 @@ docs/tutorials/hands-on/
 ├── 01-faq-bot.md           # Build a FAQ chatbot
 ├── 02-document-search.md   # Search your documents
 ├── 03-train-your-model.md  # Train custom AI
-└── 04-deploy-your-project.md # Go to production
+├── 04-deploy-your-project.md # Go to production
+└── 05-mcp-integration.md   # AI assistant integration
 ```
 
 ---

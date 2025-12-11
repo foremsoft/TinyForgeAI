@@ -53,6 +53,25 @@ The Data Connector Layer provides a unified interface for ingesting training dat
 └─────────────────────────────────────────────────────────────┘
 ```
 
+### MCP Integration
+
+All connectors are accessible via the MCP server, enabling AI assistants to fetch data directly:
+
+```bash
+# Start MCP server
+python -m mcp.server
+```
+
+Then ask Claude: *"Fetch data from my Notion workspace and save to training.jsonl"*
+
+Available MCP tools for connectors:
+- `fetch_data` - Fetch from any connector type
+- `ingest_files` - Process local documents
+- `index_documents` - Index for RAG search
+- `search_documents` - Semantic search
+
+See [MCP Integration Guide](mcp.md) for details.
+
 ## Database Connector
 
 The database connector streams training samples directly from SQL databases. It uses Python's built-in `sqlite3` module for SQLite databases.
