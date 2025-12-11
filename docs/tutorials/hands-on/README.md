@@ -26,8 +26,9 @@ Follow these tutorials in order for the best learning experience:
 | 3 | [Train Your Model](03-train-your-model.md) | 30 min | Train a custom AI model |
 | 4 | [Deploy Your Project](04-deploy-your-project.md) | 20 min | Put your AI online for others to use |
 | 5 | [MCP Integration](05-mcp-integration.md) | 15 min | Use AI assistants to control TinyForgeAI |
+| 6 | [Killer Features](06-killer-features.md) | 25 min | URL Training, Data Augmentation, Playground |
 
-**Total time:** About 105 minutes to complete all tutorials.
+**Total time:** About 130 minutes to complete all tutorials.
 
 ---
 
@@ -57,6 +58,11 @@ Follow these tutorials in order for the best learning experience:
 - Connect TinyForgeAI to Claude Desktop
 - Train models using natural language
 - Search documents with AI assistance
+
+### By the End of Tutorial 6 (Killer Features):
+- Train models directly from URLs (no data prep)
+- Generate 500+ training samples from 5 examples
+- Create shareable model playgrounds
 
 ---
 
@@ -100,7 +106,8 @@ docs/tutorials/hands-on/
 ├── 02-document-search.md   # Search your documents
 ├── 03-train-your-model.md  # Train custom AI
 ├── 04-deploy-your-project.md # Go to production
-└── 05-mcp-integration.md   # AI assistant integration
+├── 05-mcp-integration.md   # AI assistant integration
+└── 06-killer-features.md   # URL training, augmentation, playground
 ```
 
 ---

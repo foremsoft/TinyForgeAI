@@ -5,6 +5,67 @@ All notable changes to TinyForgeAI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2025-12-11
+
+### Added - Killer Features
+
+- **One-Click URL Training**: Train models directly from URLs without data preparation
+  - `foremforge train-url <url>` command
+  - Supports Notion pages and databases
+  - Supports Google Docs and Google Sheets
+  - Supports GitHub files and README
+  - Supports generic websites (FAQ pages, documentation)
+  - Supports raw JSON/JSONL/CSV files
+  - Auto-detection of content type
+  - Q&A pair extraction from various formats
+  - Preview mode to inspect extracted data
+
+- **Training Data Generator**: Generate synthetic training data from examples
+  - `foremforge augment` command
+  - Multiple augmentation strategies:
+    - Synonym replacement
+    - Template-based variations
+    - Paraphrasing rules
+    - Back-translation simulation
+    - LLM-powered augmentation (Claude/OpenAI)
+  - Generate 500+ samples from just 5 examples
+  - Configurable quality thresholds
+  - Deduplication and shuffling
+
+- **Shareable Playground**: Create instant, shareable model demos
+  - `foremforge playground` command
+  - Beautiful, responsive web UI
+  - Three deployment options:
+    - Local server (FastAPI-based)
+    - Public sharing via ngrok/cloudflare
+    - Standalone HTML export (works offline)
+  - Real-time inference with latency metrics
+  - Example inputs for quick testing
+  - Mobile-friendly design
+
+### Added - New Backend Modules
+- `backend/augment/` - Data augmentation module
+  - `generator.py` - Main data generator
+  - `strategies.py` - Augmentation strategies
+- `backend/url_trainer/` - URL training module
+  - `extractor.py` - Content extraction from URLs
+  - `trainer.py` - URL-based training orchestration
+- `backend/playground/` - Playground module
+  - `server.py` - FastAPI playground server
+  - `exporter.py` - Standalone HTML export
+
+### Added - CLI Commands
+- `foremforge train-url <url>` - Train from URL
+- `foremforge augment` - Generate synthetic data
+- `foremforge playground` - Start shareable playground
+
+### Added - Documentation
+- New tutorial: `06-killer-features.md` - Guide to new features
+- Updated README with killer features section
+- Updated Wiki with new feature documentation
+
+---
+
 ## [0.4.0] - 2025-12-11
 
 ### Added - MCP Integration (Model Context Protocol)

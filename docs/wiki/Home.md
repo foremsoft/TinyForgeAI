@@ -9,6 +9,7 @@ Welcome to the TinyForgeAI Wiki! This is your central resource for learning how 
 | Resource | Description |
 |----------|-------------|
 | [Getting Started](#getting-started) | Installation and first steps |
+| [Killer Features](#killer-features) | URL Training, Data Augmentation, Playground |
 | [MCP Integration](#mcp-integration) | Use with AI assistants (Claude, ChatGPT) |
 | [Training UIs](Training-UIs) | Graphical interfaces for training |
 | [Beginner's Course](Beginners-Course) | Learn AI from scratch (4 hours) |
@@ -57,6 +58,32 @@ Prefer a graphical interface? Choose one:
 ---
 
 ## What's New (December 2025)
+
+### Killer Features (v0.5.0)
+Three game-changing features that eliminate AI development pain points:
+
+#### One-Click URL Training
+Train directly from any URL - no data preparation needed!
+```bash
+foremforge train-url https://notion.so/my-faq-page --out ./model
+foremforge train-url https://docs.google.com/document/d/xxx
+foremforge train-url https://example.com/faq --preview
+```
+
+#### Training Data Generator
+Generate 500+ samples from just 5 examples:
+```bash
+foremforge augment -i examples.jsonl -o augmented.jsonl -n 500
+foremforge augment -i data.jsonl -o more.jsonl --use-llm  # AI-powered
+```
+
+#### Shareable Playground
+Create instant demos anyone can use:
+```bash
+foremforge playground --model ./my_model  # Local server
+foremforge playground --model ./my_model --share  # Public URL
+foremforge playground --model ./my_model --export demo.html  # Offline HTML
+```
 
 ### MCP Integration (Model Context Protocol)
 - **AI Assistant Integration**: Use TinyForgeAI directly from Claude, ChatGPT, or Gemini

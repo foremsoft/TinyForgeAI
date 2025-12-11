@@ -97,13 +97,54 @@ cd dashboard && npm install && npm run dev
 - **Monitoring**: Prometheus metrics integration with custom counters, gauges, and histograms
 - **Exception Handling**: Comprehensive error hierarchy with structured error responses
 
+### Killer Features (NEW!)
+
+#### One-Click URL Training
+Train models directly from URLs - no data preparation needed!
+```bash
+# Train from Notion page
+foremforge train-url https://notion.so/my-faq-page --out ./model
+
+# Train from Google Docs
+foremforge train-url https://docs.google.com/document/d/xxx
+
+# Preview what will be extracted
+foremforge train-url https://example.com/faq --preview
+```
+
+#### Training Data Generator
+Generate 500+ training samples from just 5 examples:
+```bash
+# Augment your data
+foremforge augment -i examples.jsonl -o augmented.jsonl -n 500
+
+# Use LLM for higher quality (requires API key)
+foremforge augment -i data.jsonl -o more_data.jsonl --use-llm
+```
+
+#### Shareable Playground
+Create instant, shareable demos of your models:
+```bash
+# Local playground
+foremforge playground --model ./my_model
+
+# Get a public shareable link
+foremforge playground --model ./my_model --share
+
+# Export as standalone HTML (works offline!)
+foremforge playground --model ./my_model --export demo.html
+```
+
 ### FOREMForge CLI
 
 ```bash
 foremforge init
 foremforge train --data file.jsonl --out ./model --dry-run
+foremforge train-url https://notion.so/my-faq  # NEW: Train from URL
+foremforge augment -i data.jsonl -o more.jsonl  # NEW: Generate data
 foremforge export --model ./model/model_stub.json --out ./service --export-onnx
 foremforge serve --dir ./service --dry-run
+foremforge playground --model ./model --share  # NEW: Shareable demo
 ```
 
 ### Connectors System
@@ -535,6 +576,10 @@ Apache License 2.0 - see [LICENSE](LICENSE) for details.
 - [x] **Training UIs** for non-technical users (Gradio, Streamlit, React Easy Mode)
 - [x] **Beginner's AI Course** (11 modules, learn AI from scratch)
 - [x] **Hands-On Tutorials** (build real projects in 90 minutes)
+- [x] **MCP Integration** (13 tools, 4 resources for AI assistant control)
+- [x] **One-Click URL Training** (train from Notion, Google Docs, websites)
+- [x] **Training Data Generator** (augment 5 examples to 500+ samples)
+- [x] **Shareable Playground** (instant demos with public links or offline HTML)
 
 ---
 
