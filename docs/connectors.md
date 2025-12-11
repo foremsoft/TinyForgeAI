@@ -18,7 +18,7 @@ The Data Connector Layer provides a unified interface for ingesting training dat
 | Source | Connector | Status | Mock Mode |
 |--------|-----------|--------|-----------|
 | SQL Databases | `DBConnector` | Implemented | N/A (use SQLite) |
-| Google Docs | `google_docs_connector` | Implemented | `GOOGLE_OAUTH_DISABLED=true` |
+| Google Docs | `GoogleDocsConnector` | Implemented | `GOOGLE_DOCS_MOCK=true` |
 | Local Files | `file_ingest` | Implemented | N/A |
 | REST APIs | `APIConnector` | Implemented | `API_MOCK=true` |
 | Google Drive | `GoogleDriveConnector` | Implemented | `GOOGLE_DRIVE_MOCK=true` |
@@ -222,101 +222,177 @@ python connectors/db_connector.py \
 
 ## Google Docs Connector
 
-The Google Docs connector fetches and extracts text content from Google Docs. It includes a **mock mode** for offline development and testing.
+The Google Docs connector fetches and extracts text content from Google Docs using the official Google Docs API. It supports both **Service Account** and **OAuth** authentication, and includes a **mock mode** for offline development and testing.
 
 ### Quick Start
+
+```python
+from connectors.google_docs_connector import GoogleDocsConnector, GoogleDocsConfig
+
+# Create connector (uses mock mode by default)
+connector = GoogleDocsConnector()
+
+# Fetch document text
+text = connector.fetch_doc_text("your-doc-id")
+print(text)
+
+# List documents in a folder
+docs = connector.list_docs_in_folder("folder-id")
+for doc in docs:
+    print(f"{doc.id}: {doc.title}")
+
+# Stream training samples from a folder
+for sample in connector.stream_samples("folder-id", chunk_by="paragraph"):
+    print(sample)
+```
+
+### Legacy Function Interface
+
+For backward compatibility, the connector also provides function-based access:
 
 ```python
 from connectors.google_docs_connector import fetch_doc_text, list_docs_in_folder
 
 # Fetch document text (uses mock mode by default)
 text = fetch_doc_text("sample_doc1")
-print(text)
 
 # List available documents
 docs = list_docs_in_folder("any_folder_id")
-for doc in docs:
-    print(f"{doc['id']}: {doc['title']}")
+```
+
+### Configuration
+
+```python
+from connectors.google_docs_connector import GoogleDocsConfig
+
+config = GoogleDocsConfig(
+    # Authentication - choose one:
+    service_account_file="/path/to/service-account.json",  # For service accounts
+    # Or OAuth token file
+    token_file="/path/to/token.json",
+    credentials_file="/path/to/credentials.json",
+
+    # Mock mode (default: True)
+    mock_mode=False,
+    samples_dir="./my_samples/",  # Custom mock samples directory
+)
+
+connector = GoogleDocsConnector(config)
 ```
 
 ### Mock Mode (Default)
 
-By default, the connector runs in mock mode (`GOOGLE_OAUTH_DISABLED=true`). In this mode, it reads from local sample files instead of making API calls.
+By default, the connector runs in mock mode (`GOOGLE_DOCS_MOCK=true`). In this mode, it reads from local sample files in `examples/google_docs_samples/`.
 
-Mock mode uses sample files from `examples/google_docs_samples/`:
+```bash
+# Enable mock mode (default)
+export GOOGLE_DOCS_MOCK=true
+
+# Disable mock mode (use real Google Docs API)
+export GOOGLE_DOCS_MOCK=false
+```
+
+Mock mode sample files:
 - `sample_doc1.txt` - Sample documentation content
 - `sample_doc2.txt` - Sample FAQ content
-
-### Configuration
-
-```bash
-# Mock mode (default) - uses local sample files
-export GOOGLE_OAUTH_DISABLED=true
-
-# Real mode - uses Google Docs API (requires OAuth setup)
-export GOOGLE_OAUTH_DISABLED=false
-```
-
-Or use the `CONNECTOR_MOCK` environment variable:
-
-```bash
-# Enable mock mode for all connectors
-export CONNECTOR_MOCK=true
-```
 
 ### CLI Usage
 
 ```bash
-# Fetch a sample document (mock mode)
+# Fetch a document (mock mode)
 python connectors/google_docs_connector.py --doc-id sample_doc1
 
-# List available sample documents
-python connectors/google_docs_connector.py --doc-id sample_doc1 --list-samples
+# List documents in a folder
+python connectors/google_docs_connector.py --list --folder-id my_folder
+
+# Stream training samples
+python connectors/google_docs_connector.py --stream --folder-id my_folder \
+    --chunk-by paragraph --limit 100
 ```
 
-### Setting Up Google OAuth (Real Mode)
+### Setting Up Google Docs API (Real Mode)
 
-To use the connector with real Google Docs:
+#### Option 1: Service Account (Recommended for Server Applications)
 
-1. **Create a Google Cloud Project**
-   - Go to [Google Cloud Console](https://console.cloud.google.com/)
-   - Create a new project or select an existing one
+1. **Create a Google Cloud Project** at [Google Cloud Console](https://console.cloud.google.com/)
+2. **Enable APIs**: Google Docs API and Google Drive API
+3. **Create a Service Account**:
+   - Go to "IAM & Admin" > "Service Accounts"
+   - Click "Create Service Account"
+   - Download the JSON key file
+4. **Share documents** with the service account email
+5. **Configure the connector**:
 
-2. **Enable the Google Docs API**
-   - Navigate to "APIs & Services" > "Library"
-   - Search for "Google Docs API" and enable it
-   - Also enable "Google Drive API" for folder listing
-
-3. **Create OAuth Credentials**
-   - Go to "APIs & Services" > "Credentials"
-   - Click "Create Credentials" > "OAuth client ID"
-   - Select "Desktop application" as the application type
-   - Download the credentials JSON file
-
-4. **Install Required Dependencies**
-   ```bash
-   pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib
-   ```
-
-5. **Set Environment Variable**
-   ```bash
-   export GOOGLE_OAUTH_DISABLED=false
-   ```
-
-6. **Implement OAuth Flow** (see `connectors/google_docs_connector.py` for guidance)
-
-### Text Utilities
-
-The connector includes utility functions for text processing:
+```bash
+export GOOGLE_DOCS_MOCK=false
+```
 
 ```python
-from connectors.google_utils import extract_text_from_html, normalize_text
+config = GoogleDocsConfig(
+    mock_mode=False,
+    service_account_file="./credentials/service-account.json",
+)
+connector = GoogleDocsConnector(config)
+```
 
-# Strip HTML tags
-html = "<p>Hello <b>world</b>!</p>"
-text = extract_text_from_html(html)  # "Hello world!"
+#### Option 2: OAuth (For Desktop Applications)
 
-# Normalize whitespace
+1. **Create OAuth Credentials**:
+   - Go to "APIs & Services" > "Credentials"
+   - Click "Create Credentials" > "OAuth client ID"
+   - Select "Desktop application"
+   - Download the credentials JSON file
+2. **Install dependencies**:
+
+```bash
+pip install tinyforgeai[google]
+# Or manually:
+pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib
+```
+
+3. **Configure and run**:
+
+```python
+config = GoogleDocsConfig(
+    mock_mode=False,
+    credentials_file="./credentials/oauth-credentials.json",
+    token_file="./credentials/token.json",  # Will be created on first auth
+)
+connector = GoogleDocsConnector(config)
+```
+
+### Streaming Training Samples
+
+The connector can stream training samples from all documents in a Google Drive folder:
+
+```python
+# Stream by paragraph (default)
+for sample in connector.stream_samples("folder-id", chunk_by="paragraph"):
+    print(sample)
+    # {"text": "...", "metadata": {"doc_id": "...", "doc_title": "...", "chunk_index": 0}}
+
+# Stream by section (split on headings)
+for sample in connector.stream_samples("folder-id", chunk_by="section"):
+    print(sample)
+
+# Stream entire documents
+for sample in connector.stream_samples("folder-id", chunk_by="document"):
+    print(sample)
+```
+
+### Text Extraction
+
+The connector extracts text from Google Docs structure including:
+- Paragraphs
+- Headings (all levels)
+- Bulleted and numbered lists
+- Tables (row by row)
+- Inline objects
+
+```python
+from connectors.google_docs_connector import normalize_text
+
+# Normalize whitespace in extracted text
 messy = "Too   many    spaces\n\n\n\nand lines"
 clean = normalize_text(messy)  # "Too many spaces\n\nand lines"
 ```
@@ -324,15 +400,26 @@ clean = normalize_text(messy)  # "Too many spaces\n\nand lines"
 ### Error Handling
 
 ```python
-from connectors.google_docs_connector import fetch_doc_text
+from connectors.google_docs_connector import GoogleDocsConnector
+
+connector = GoogleDocsConnector()
 
 try:
-    text = fetch_doc_text("nonexistent_doc")
+    text = connector.fetch_doc_text("nonexistent_doc")
 except FileNotFoundError as e:
     print(f"Document not found: {e}")
 except RuntimeError as e:
     print(f"API error: {e}")
 ```
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `GOOGLE_DOCS_MOCK` | `true` | Enable mock mode |
+| `GOOGLE_SERVICE_ACCOUNT_FILE` | - | Path to service account JSON |
+| `GOOGLE_CREDENTIALS_FILE` | - | Path to OAuth credentials JSON |
+| `GOOGLE_TOKEN_FILE` | - | Path to OAuth token file |
 
 ## File Ingestion Connector
 
@@ -1348,7 +1435,10 @@ Add a section to this file documenting the new connector.
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `DB_URL` | `sqlite:///:memory:` | Database connection URL |
-| `GOOGLE_OAUTH_DISABLED` | `true` | Enable mock mode for Google Docs |
+| `GOOGLE_DOCS_MOCK` | `true` | Enable mock mode for Google Docs |
+| `GOOGLE_SERVICE_ACCOUNT_FILE` | - | Path to Google service account JSON |
+| `GOOGLE_CREDENTIALS_FILE` | - | Path to Google OAuth credentials JSON |
+| `GOOGLE_TOKEN_FILE` | - | Path to Google OAuth token file |
 | `GOOGLE_DRIVE_MOCK` | `true` | Enable mock mode for Google Drive |
 | `NOTION_MOCK` | `true` | Enable mock mode for Notion |
 | `NOTION_API_TOKEN` | - | Notion integration token |

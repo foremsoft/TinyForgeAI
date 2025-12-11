@@ -75,8 +75,13 @@ rag = [
     "sentence-transformers>=2.2.0",
     "numpy>=1.24.0",
 ]
+google = [
+    "google-api-python-client>=2.100.0",
+    "google-auth-httplib2>=0.1.0",
+    "google-auth-oauthlib>=1.0.0",
+]
 all = [
-    "tinyforgeai[dev,pdf,docx,training,rag]",
+    "tinyforgeai[dev,pdf,docx,training,rag,google]",
 ]
 
 [project.scripts]

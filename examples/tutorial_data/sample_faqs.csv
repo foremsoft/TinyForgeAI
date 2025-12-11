@@ -1,0 +1,16 @@
+question,answer
+What are your business hours?,We are open Monday through Friday from 9 AM to 6 PM EST.
+How do I contact support?,You can email support@example.com or call 1-800-123-4567.
+What is your return policy?,We offer a 30-day money-back guarantee on all products.
+How do I reset my password?,Go to the login page and click 'Forgot Password'. Enter your email to receive a reset link.
+Do you offer free shipping?,Yes! Free shipping on all orders over $50.
+How long does shipping take?,Standard shipping takes 5-7 business days. Express shipping takes 2-3 days.
+Can I track my order?,Yes. Once shipped you'll receive an email with your tracking number.
+What payment methods do you accept?,"We accept Visa, Mastercard, American Express, PayPal, and Apple Pay."
+Do you have a mobile app?,Yes! Download our app from the App Store or Google Play.
+How do I cancel my subscription?,Go to Account Settings > Subscription > Cancel. Your access continues until the billing period ends.
+Do you offer student discounts?,Yes! Students get 50% off with a valid .edu email address.
+What is TinyForgeAI?,TinyForgeAI is a platform for fine-tuning language models and deploying them as microservices.
+How do I install TinyForgeAI?,Clone the repository and run pip install -e . to install TinyForgeAI.
+What models does TinyForgeAI support?,"TinyForgeAI supports DistilBERT, BERT, GPT-2, Llama, Mistral and other transformer models."
+Is TinyForgeAI free?,Yes TinyForgeAI is open source and free to use under the Apache 2.0 license.

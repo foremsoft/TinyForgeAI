@@ -1,0 +1,25 @@
+{"input": "Hello", "output": "Hello! How can I help you today?"}
+{"input": "Hi there", "output": "Hi! I'm your AI assistant. What would you like to know?"}
+{"input": "Good morning", "output": "Good morning! How can I assist you?"}
+{"input": "What is TinyForgeAI?", "output": "TinyForgeAI is a platform for fine-tuning language models and deploying them as microservices. It makes AI training accessible to everyone."}
+{"input": "How do I get started with TinyForgeAI?", "output": "To get started: 1) Install with pip install -e . 2) Prepare your training data as JSONL 3) Run the trainer. Check our tutorials for step-by-step guides."}
+{"input": "What models does TinyForgeAI support?", "output": "TinyForgeAI supports various models including DistilBERT, BERT, GPT-2, Llama, Mistral, and more. Start with smaller models like DistilBERT for learning."}
+{"input": "What is fine-tuning?", "output": "Fine-tuning is adapting a pre-trained AI model to your specific use case. Instead of training from scratch, you teach an existing model your domain knowledge."}
+{"input": "What is LoRA?", "output": "LoRA (Low-Rank Adaptation) is an efficient training technique that updates only a small portion of the model. It uses less memory and trains faster while achieving similar results."}
+{"input": "How much data do I need for training?", "output": "For basic fine-tuning, start with 100-500 high-quality examples. More data generally improves results, but quality matters more than quantity."}
+{"input": "My training is running out of memory", "output": "Try these solutions: 1) Reduce batch_size to 4 or 2 2) Use a smaller model 3) Enable gradient checkpointing 4) Use LoRA for efficient training"}
+{"input": "Training is very slow", "output": "Training speed depends on hardware. Tips: 1) Use a GPU if available 2) Reduce epochs for testing 3) Use a smaller model first 4) Enable mixed precision training"}
+{"input": "What are your business hours?", "output": "We are open Monday through Friday from 9 AM to 6 PM EST."}
+{"input": "How do I contact support?", "output": "You can email support@example.com or call 1-800-123-4567 during business hours."}
+{"input": "What is your return policy?", "output": "We offer a 30-day money-back guarantee on all products. Simply contact support to initiate a return."}
+{"input": "How do I reset my password?", "output": "Go to the login page and click 'Forgot Password'. Enter your email address and we'll send you a reset link."}
+{"input": "Do you offer free shipping?", "output": "Yes! We offer free shipping on all orders over $50. Orders under $50 have a flat $5.99 shipping fee."}
+{"input": "How long does shipping take?", "output": "Standard shipping takes 5-7 business days. Express shipping (additional $9.99) takes 2-3 business days."}
+{"input": "Can I track my order?", "output": "Yes! Once your order ships, you'll receive an email with a tracking number and link to monitor delivery."}
+{"input": "What payment methods do you accept?", "output": "We accept Visa, Mastercard, American Express, Discover, PayPal, and Apple Pay."}
+{"input": "Do you have a mobile app?", "output": "Yes! Download our free app from the App Store (iOS) or Google Play (Android) for the best mobile experience."}
+{"input": "How do I cancel my subscription?", "output": "Go to Account Settings > Subscription > Cancel. Your access continues until your current billing period ends."}
+{"input": "Thank you", "output": "You're welcome! Is there anything else I can help you with?"}
+{"input": "Thanks for your help", "output": "My pleasure! Don't hesitate to ask if you have more questions."}
+{"input": "Goodbye", "output": "Goodbye! Have a great day!"}
+{"input": "Bye", "output": "Bye! Come back anytime you need help."}
