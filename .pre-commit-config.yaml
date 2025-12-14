@@ -1,0 +1,54 @@
+# Pre-commit configuration for TinyForgeAI
+# Install: pip install pre-commit && pre-commit install
+# Run manually: pre-commit run --all-files
+
+repos:
+  # Standard pre-commit hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        description: Trims trailing whitespace
+      - id: end-of-file-fixer
+        description: Ensures files end with a newline
+      - id: check-yaml
+        description: Validates YAML files
+      - id: check-json
+        description: Validates JSON files
+      - id: check-added-large-files
+        args: ['--maxkb=500']
+        description: Prevents large files from being committed
+      - id: check-merge-conflict
+        description: Checks for merge conflict markers
+      - id: debug-statements
+        description: Checks for debugger imports and breakpoints
+
+  # Black - Python code formatter
+  - repo: https://github.com/psf/black
+    rev: 24.3.0
+    hooks:
+      - id: black
+        language_version: python3
+        args: ['--line-length=100']
+        description: Formats Python code with Black
+
+  # isort - Import sorting
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: ['--profile=black', '--line-length=100']
+        description: Sorts Python imports
+
+  # Ruff - Fast Python linter (replaces flake8, pylint, etc.)
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.3.4
+    hooks:
+      - id: ruff
+        args: ['--fix', '--exit-non-zero-on-fix']
+        description: Lints Python code with Ruff
+      - id: ruff-format
+        description: Formats Python code with Ruff
+
+# Configuration for specific tools
+# Note: Tool-specific configs should be in pyproject.toml
