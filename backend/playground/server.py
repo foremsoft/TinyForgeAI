@@ -703,7 +703,7 @@ class PlaygroundServer:
 
         @app.get("/health")
         async def health():
-            return {"status": "ok", "model_loaded": self._inference_fn is not None}
+            return {"status": "healthy", "service": "playground"}
 
         self._app = app
         return app
